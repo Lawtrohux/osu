@@ -16,7 +16,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
     /// This component detects two basic types of patterns, leveraged by the following techniques:
     /// <list>
     /// <item>Rolling allows hitting patterns with quickly and regularly alternating notes with a single hand.</item>
-    /// <item>TL tapping makes hitting longer sequences of consecutive same-colour notes with little to no colour changes in-between.</item>
     /// </list>
     /// </remarks>
     public class StaminaCheeseDetector
@@ -25,11 +24,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         /// The minimum number of consecutive objects with repeating patterns that can be classified as hittable using a roll.
         /// </summary>
         private const int roll_min_repetitions = 12;
-
-        /// <summary>
-        /// The minimum number of consecutive objects with repeating patterns that can be classified as hittable using a TL tap.
-        /// </summary>
-        private const int tl_min_repetitions = 16;
 
         /// <summary>
         /// The list of all <see cref="TaikoDifficultyHitObject"/>s in the map.
@@ -49,11 +43,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         {
             findRolls(3);
             findRolls(4);
-
-            findTlTap(0, HitType.Rim);
-            findTlTap(1, HitType.Rim);
-            findTlTap(0, HitType.Centre);
-            findTlTap(1, HitType.Centre);
         }
 
         /// <summary>
@@ -106,31 +95,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             }
 
             return true;
-        }
-
-        /// <summary>
-        /// Finds and marks all sequences hittable using a TL tap.
-        /// </summary>
-        /// <param name="parity">Whether sequences starting with an odd- (1) or even-indexed (0) hit object should be checked.</param>
-        /// <param name="type">The type of hit to check for TL taps.</param>
-        private void findTlTap(int parity, HitType type)
-        {
-            int tlLength = -2;
-            int lastMarkEnd = 0;
-
-            for (int i = parity; i < hitObjects.Count; i += 2)
-            {
-                if (hitObjects[i].HitType == type)
-                    tlLength += 2;
-                else
-                    tlLength = -2;
-
-                if (tlLength < tl_min_repetitions)
-                    continue;
-
-                markObjectsAsCheese(Math.Max(lastMarkEnd, i - tlLength + 1), i);
-                lastMarkEnd = i;
-            }
         }
 
         /// <summary>
