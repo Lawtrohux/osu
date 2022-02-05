@@ -8,6 +8,7 @@ using NUnit.Framework;
 using osu.Framework.Allocation;
 using osu.Framework.Audio;
 using osu.Framework.Bindables;
+using osu.Framework.Extensions;
 using osu.Framework.Graphics;
 using osu.Framework.Platform;
 using osu.Framework.Testing;
@@ -21,7 +22,6 @@ using osu.Game.Rulesets;
 using osu.Game.Screens.OnlinePlay.Multiplayer.Match;
 using osu.Game.Tests.Resources;
 using osuTK;
-using osuTK.Input;
 
 namespace osu.Game.Tests.Visual.Multiplayer
 {
@@ -40,9 +40,11 @@ namespace osu.Game.Tests.Visual.Multiplayer
         [BackgroundDependencyLoader]
         private void load(GameHost host, AudioManager audio)
         {
-            Dependencies.Cache(rulesets = new RulesetStore(ContextFactory));
-            Dependencies.Cache(beatmaps = new BeatmapManager(LocalStorage, ContextFactory, rulesets, null, audio, Resources, host, Beatmap.Default));
-            beatmaps.Import(TestResources.GetQuickTestBeatmapForImport()).Wait();
+            Dependencies.Cache(rulesets = new RulesetStore(Realm));
+            Dependencies.Cache(beatmaps = new BeatmapManager(LocalStorage, Realm, rulesets, null, audio, Resources, host, Beatmap.Default));
+            Dependencies.Cache(Realm);
+
+            beatmaps.Import(TestResources.GetQuickTestBeatmapForImport()).WaitSafely();
         }
 
         [SetUp]
@@ -50,7 +52,7 @@ namespace osu.Game.Tests.Visual.Multiplayer
         {
             AvailabilityTracker.SelectedItem.BindTo(selectedItem);
 
-            importedSet = beatmaps.GetAllUsableBeatmapSetsEnumerable(IncludedDetails.All).First();
+            importedSet = beatmaps.GetAllUsableBeatmapSets().First();
             Beatmap.Value = beatmaps.GetWorkingBeatmap(importedSet.Beatmaps.First());
             selectedItem.Value = new PlaylistItem
             {
@@ -112,10 +114,10 @@ namespace osu.Game.Tests.Visual.Multiplayer
                 Client.TransferHost(2);
             });
 
-            addClickButtonStep();
+            ClickButtonWhenEnabled<MultiplayerReadyButton>();
             AddUntilStep("user is ready", () => Client.Room?.Users[0].State == MultiplayerUserState.Ready);
 
-            addClickButtonStep();
+            ClickButtonWhenEnabled<MultiplayerReadyButton>();
             AddUntilStep("user is idle", () => Client.Room?.Users[0].State == MultiplayerUserState.Idle);
         }
 
@@ -131,7 +133,7 @@ namespace osu.Game.Tests.Visual.Multiplayer
                     Client.AddUser(new APIUser { Id = 2, Username = "Another user" });
             });
 
-            addClickButtonStep();
+            ClickButtonWhenEnabled<MultiplayerReadyButton>();
             AddUntilStep("user is ready", () => Client.Room?.Users[0].State == MultiplayerUserState.Ready);
 
             verifyGameplayStartFlow();
@@ -146,7 +148,7 @@ namespace osu.Game.Tests.Visual.Multiplayer
                 Client.TransferHost(2);
             });
 
-            addClickButtonStep();
+            ClickButtonWhenEnabled<MultiplayerReadyButton>();
             AddStep("make user host", () => Client.TransferHost(Client.Room?.Users[0].UserID ?? 0));
 
             verifyGameplayStartFlow();
@@ -161,11 +163,14 @@ namespace osu.Game.Tests.Visual.Multiplayer
                 Client.AddUser(new APIUser { Id = 2, Username = "Another user" });
             });
 
-            addClickButtonStep();
+            ClickButtonWhenEnabled<MultiplayerReadyButton>();
+            AddUntilStep("user is ready", () => Client.Room?.Users[0].State == MultiplayerUserState.Ready);
+
             AddStep("transfer host", () => Client.TransferHost(Client.Room?.Users[1].UserID ?? 0));
 
-            addClickButtonStep();
-            AddAssert("match not started", () => Client.Room?.Users[0].State == MultiplayerUserState.Idle);
+            ClickButtonWhenEnabled<MultiplayerReadyButton>();
+            AddUntilStep("user is idle (match not started)", () => Client.Room?.Users[0].State == MultiplayerUserState.Idle);
+            AddAssert("ready button enabled", () => button.ChildrenOfType<OsuButton>().Single().Enabled.Value);
         }
 
         [TestCase(true)]
@@ -183,7 +188,7 @@ namespace osu.Game.Tests.Visual.Multiplayer
             if (!isHost)
                 AddStep("transfer host", () => Client.TransferHost(2));
 
-            addClickButtonStep();
+            ClickButtonWhenEnabled<MultiplayerReadyButton>();
 
             AddRepeatStep("change user ready state", () =>
             {
@@ -198,16 +203,10 @@ namespace osu.Game.Tests.Visual.Multiplayer
             }, users);
         }
 
-        private void addClickButtonStep() => AddStep("click button", () =>
-        {
-            InputManager.MoveMouseTo(button);
-            InputManager.Click(MouseButton.Left);
-        });
-
         private void verifyGameplayStartFlow()
         {
             AddUntilStep("user is ready", () => Client.Room?.Users[0].State == MultiplayerUserState.Ready);
-            addClickButtonStep();
+            ClickButtonWhenEnabled<MultiplayerReadyButton>();
             AddUntilStep("user waiting for load", () => Client.Room?.Users[0].State == MultiplayerUserState.WaitingForLoad);
 
             AddAssert("ready button disabled", () => !button.ChildrenOfType<OsuButton>().Single().Enabled.Value);
