@@ -34,7 +34,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             new Colour(mods),
             new Rhythm(mods),
             new Stamina(mods, true),
-            new Stamina(mods, false),
+            new Stamina(mods, false)
         };
 
         protected override Mod[] DifficultyAdjustmentMods => new Mod[]
@@ -59,6 +59,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             }
 
             new StaminaCheeseDetector(taikoDifficultyHitObjects).FindCheese();
+            new EffectiveBPMLoader(this.Beatmap, taikoDifficultyHitObjects).LoadEffectiveBPM();
             return taikoDifficultyHitObjects;
         }
 

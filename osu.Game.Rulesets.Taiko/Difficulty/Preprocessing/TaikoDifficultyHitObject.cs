@@ -36,6 +36,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         public bool StaminaCheese;
 
         /// <summary>
+        /// Effective BPM of the object, required for reading difficulty calculation
+        /// </summary>
+        public double EffectiveBPM;
+
+        /// <summary>
         /// Creates a new difficulty hit object.
         /// </summary>
         /// <param name="hitObject">The gameplay <see cref="HitObject"/> associated with this difficulty object.</param>
