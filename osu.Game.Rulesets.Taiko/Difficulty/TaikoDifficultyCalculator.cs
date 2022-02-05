@@ -23,6 +23,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private const double rhythm_skill_multiplier = 0.014;
         private const double colour_skill_multiplier = 0.01;
         private const double stamina_skill_multiplier = 0.02;
+        private const double reading_skill_multiplier = 0.012;
 
         public TaikoDifficultyCalculator(IRulesetInfo ruleset, IWorkingBeatmap beatmap)
             : base(ruleset, beatmap)
@@ -34,7 +35,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             new Colour(mods),
             new Rhythm(mods),
             new Stamina(mods, true),
-            new Stamina(mods, false)
+            new Stamina(mods, false),
+            new Reading(mods)
         };
 
         protected override Mod[] DifficultyAdjustmentMods => new Mod[]
@@ -72,16 +74,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             var rhythm = (Rhythm)skills[1];
             var staminaRight = (Stamina)skills[2];
             var staminaLeft = (Stamina)skills[3];
+            var reading = (Reading)skills[4];
 
             double colourRating = colour.DifficultyValue() * colour_skill_multiplier;
             double rhythmRating = rhythm.DifficultyValue() * rhythm_skill_multiplier;
             double staminaRating = (staminaRight.DifficultyValue() + staminaLeft.DifficultyValue()) * stamina_skill_multiplier;
+            double readingRating = reading.DifficultyValue() * reading_skill_multiplier * reading_skill_penalty;
 
             double staminaPenalty = simpleColourPenalty(staminaRating, colourRating);
+            double readingPenalty = readingSkillPenalty(readingRating, colourRating);
             staminaRating *= staminaPenalty;
 
-            double combinedRating = locallyCombinedDifficulty(colour, rhythm, staminaRight, staminaLeft, staminaPenalty);
-            double separatedRating = norm(1.5, colourRating, rhythmRating, staminaRating);
+            double combinedRating = locallyCombinedDifficulty(colour, rhythm, staminaRight, staminaLeft, staminaPenalty, reading, ReadingPenalty);
+            double separatedRating = norm(1.5, colourRating, rhythmRating, staminaRating, readingRating);
             double starRating = 1.4 * separatedRating + 0.5 * combinedRating;
             starRating = rescale(starRating);
 
@@ -95,6 +100,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 StaminaDifficulty = staminaRating,
                 RhythmDifficulty = rhythmRating,
                 ColourDifficulty = colourRating,
+                ReadingDifficulty = readingRating,
                 GreatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate,
                 MaxCombo = beatmap.HitObjects.Count(h => h is Hit),
             };
@@ -114,6 +120,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             return 0.79 - Math.Atan(staminaDifficulty / colorDifficulty - 12) / Math.PI / 2;
         }
 
+
+       private double readingSkillPenalty(double readingDifficulty, double colorDifficulty)
+       {
+
+       }
+    
+
         /// <summary>
         /// Returns the <i>p</i>-norm of an <i>n</i>-dimensional vector.
         /// </summary>
@@ -128,7 +141,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// For each section, the peak strains of all separate skills are combined into a single peak strain for the section.
         /// The resulting partial rating of the beatmap is a weighted sum of the combined peaks (higher peaks are weighted more).
         /// </remarks>
-        private double locallyCombinedDifficulty(Colour colour, Rhythm rhythm, Stamina staminaRight, Stamina staminaLeft, double staminaPenalty)
+        private double locallyCombinedDifficulty(Colour colour, Rhythm rhythm, Stamina staminaRight, Stamina staminaLeft, double staminaPenalty, Reading reading)
         {
             List<double> peaks = new List<double>();
 
@@ -136,13 +149,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             var rhythmPeaks = rhythm.GetCurrentStrainPeaks().ToList();
             var staminaRightPeaks = staminaRight.GetCurrentStrainPeaks().ToList();
             var staminaLeftPeaks = staminaLeft.GetCurrentStrainPeaks().ToList();
+            var readingPeaks = reading.GetCurrentStrainPeaks().ToList();
 
             for (int i = 0; i < colourPeaks.Count; i++)
             {
                 double colourPeak = colourPeaks[i] * colour_skill_multiplier;
                 double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
                 double staminaPeak = (staminaRightPeaks[i] + staminaLeftPeaks[i]) * stamina_skill_multiplier * staminaPenalty;
-                peaks.Add(norm(2, colourPeak, rhythmPeak, staminaPeak));
+                double readingPeak = (readingPeaks[i] * reading_skill_multiplier) * reading_skill_penalty;
+                peaks.Add(norm(2, colourPeak, rhythmPeak, staminaPeak, readingPeak));
             }
 
             double difficulty = 0;
