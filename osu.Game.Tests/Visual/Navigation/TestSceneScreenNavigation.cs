@@ -1,24 +1,29 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Linq;
 using NUnit.Framework;
 using osu.Framework.Allocation;
+using osu.Framework.Extensions;
 using osu.Framework.Graphics.Containers;
 using osu.Framework.Screens;
 using osu.Framework.Testing;
 using osu.Game.Beatmaps;
 using osu.Game.Graphics.UserInterface;
+using osu.Game.Online.Leaderboards;
 using osu.Game.Overlays;
 using osu.Game.Overlays.Mods;
 using osu.Game.Overlays.Toolbar;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Osu.Mods;
+using osu.Game.Scoring;
 using osu.Game.Screens.Menu;
 using osu.Game.Screens.OnlinePlay.Lounge;
 using osu.Game.Screens.Play;
 using osu.Game.Screens.Ranking;
 using osu.Game.Screens.Select;
+using osu.Game.Screens.Select.Leaderboards;
 using osu.Game.Screens.Select.Options;
 using osu.Game.Tests.Beatmaps.IO;
 using osuTK;
@@ -66,9 +71,11 @@ namespace osu.Game.Tests.Visual.Navigation
         {
             Player player = null;
 
-            PushAndConfirm(() => new TestPlaySongSelect());
+            Screens.Select.SongSelect songSelect = null;
+            PushAndConfirm(() => songSelect = new TestPlaySongSelect());
+            AddUntilStep("wait for song select", () => songSelect.BeatmapSetsLoaded);
 
-            AddStep("import beatmap", () => ImportBeatmapTest.LoadQuickOszIntoOsu(Game).Wait());
+            AddStep("import beatmap", () => BeatmapImportHelper.LoadQuickOszIntoOsu(Game).WaitSafely());
 
             AddUntilStep("wait for selected", () => !Game.Beatmap.IsDefault);
 
@@ -93,33 +100,87 @@ namespace osu.Game.Tests.Visual.Navigation
         [Test]
         public void TestRetryFromResults()
         {
-            Player player = null;
-            ResultsScreen results = null;
+            var getOriginalPlayer = playToResults();
 
-            WorkingBeatmap beatmap() => Game.Beatmap.Value;
+            AddStep("attempt to retry", () => ((ResultsScreen)Game.ScreenStack.CurrentScreen).ChildrenOfType<HotkeyRetryOverlay>().First().Action());
+            AddUntilStep("wait for player", () => Game.ScreenStack.CurrentScreen != getOriginalPlayer() && Game.ScreenStack.CurrentScreen is Player);
+        }
 
-            PushAndConfirm(() => new TestPlaySongSelect());
+        [Test]
+        public void TestDeleteAllScoresAfterPlaying()
+        {
+            playToResults();
 
-            AddStep("import beatmap", () => ImportBeatmapTest.LoadQuickOszIntoOsu(Game).Wait());
+            ScoreInfo score = null;
+            LeaderboardScore scorePanel = null;
 
-            AddUntilStep("wait for selected", () => !Game.Beatmap.IsDefault);
+            AddStep("get score", () => score = ((ResultsScreen)Game.ScreenStack.CurrentScreen).Score);
 
-            AddStep("set mods", () => Game.SelectedMods.Value = new Mod[] { new OsuModNoFail(), new OsuModDoubleTime { SpeedChange = { Value = 2 } } });
+            AddAssert("ensure score is databased", () => Game.Realm.Run(r => r.Find<ScoreInfo>(score.ID)?.DeletePending == false));
 
-            AddStep("press enter", () => InputManager.Key(Key.Enter));
+            AddStep("press back button", () => Game.ChildrenOfType<BackButton>().First().Action());
 
-            AddUntilStep("wait for player", () =>
+            AddStep("show local scores", () => Game.ChildrenOfType<BeatmapDetailAreaTabControl>().First().Current.Value = new BeatmapDetailAreaLeaderboardTabItem<BeatmapLeaderboardScope>(BeatmapLeaderboardScope.Local));
+
+            AddUntilStep("wait for score displayed", () => (scorePanel = Game.ChildrenOfType<LeaderboardScore>().FirstOrDefault(s => s.Score.Equals(score))) != null);
+
+            AddStep("open options", () => InputManager.Key(Key.F3));
+
+            AddStep("choose clear all scores", () => InputManager.Key(Key.Number4));
+
+            AddUntilStep("wait for dialog display", () => Game.Dependencies.Get<DialogOverlay>().IsLoaded);
+            AddUntilStep("wait for dialog", () => Game.Dependencies.Get<DialogOverlay>().CurrentDialog != null);
+            AddStep("confirm deletion", () => InputManager.Key(Key.Number1));
+            AddUntilStep("wait for dialog dismissed", () => Game.Dependencies.Get<DialogOverlay>().CurrentDialog == null);
+
+            AddAssert("ensure score is pending deletion", () => Game.Realm.Run(r => r.Find<ScoreInfo>(score.ID)?.DeletePending == true));
+
+            AddUntilStep("wait for score panel removal", () => scorePanel.Parent == null);
+        }
+
+        [Test]
+        public void TestDeleteScoreAfterPlaying()
+        {
+            playToResults();
+
+            ScoreInfo score = null;
+            LeaderboardScore scorePanel = null;
+
+            AddStep("get score", () => score = ((ResultsScreen)Game.ScreenStack.CurrentScreen).Score);
+
+            AddAssert("ensure score is databased", () => Game.Realm.Run(r => r.Find<ScoreInfo>(score.ID)?.DeletePending == false));
+
+            AddStep("press back button", () => Game.ChildrenOfType<BackButton>().First().Action());
+
+            AddStep("show local scores", () => Game.ChildrenOfType<BeatmapDetailAreaTabControl>().First().Current.Value = new BeatmapDetailAreaLeaderboardTabItem<BeatmapLeaderboardScope>(BeatmapLeaderboardScope.Local));
+
+            AddUntilStep("wait for score displayed", () => (scorePanel = Game.ChildrenOfType<LeaderboardScore>().FirstOrDefault(s => s.Score.Equals(score))) != null);
+
+            AddStep("right click panel", () =>
             {
-                // dismiss any notifications that may appear (ie. muted notification).
-                clickMouseInCentre();
-                return (player = Game.ScreenStack.CurrentScreen as Player) != null;
+                InputManager.MoveMouseTo(scorePanel);
+                InputManager.Click(MouseButton.Right);
             });
 
-            AddUntilStep("wait for track playing", () => beatmap().Track.IsRunning);
-            AddStep("seek to near end", () => player.ChildrenOfType<GameplayClockContainer>().First().Seek(beatmap().Beatmap.HitObjects[^1].StartTime - 1000));
-            AddUntilStep("wait for pass", () => (results = Game.ScreenStack.CurrentScreen as ResultsScreen) != null && results.IsLoaded);
-            AddStep("attempt to retry", () => results.ChildrenOfType<HotkeyRetryOverlay>().First().Action());
-            AddUntilStep("wait for player", () => Game.ScreenStack.CurrentScreen != player && Game.ScreenStack.CurrentScreen is Player);
+            AddStep("click delete", () =>
+            {
+                var dropdownItem = Game
+                                   .ChildrenOfType<PlayBeatmapDetailArea>().First()
+                                   .ChildrenOfType<OsuContextMenu>().First()
+                                   .ChildrenOfType<DrawableOsuMenuItem>().First(i => i.Item.Text.ToString() == "Delete");
+
+                InputManager.MoveMouseTo(dropdownItem);
+                InputManager.Click(MouseButton.Left);
+            });
+
+            AddUntilStep("wait for dialog display", () => Game.Dependencies.Get<DialogOverlay>().IsLoaded);
+            AddUntilStep("wait for dialog", () => Game.Dependencies.Get<DialogOverlay>().CurrentDialog != null);
+            AddStep("confirm deletion", () => InputManager.Key(Key.Number1));
+            AddUntilStep("wait for dialog dismissed", () => Game.Dependencies.Get<DialogOverlay>().CurrentDialog == null);
+
+            AddAssert("ensure score is pending deletion", () => Game.Realm.Run(r => r.Find<ScoreInfo>(score.ID)?.DeletePending == true));
+
+            AddUntilStep("wait for score panel removal", () => scorePanel.Parent == null);
         }
 
         [TestCase(true)]
@@ -128,11 +189,13 @@ namespace osu.Game.Tests.Visual.Navigation
         {
             Player player = null;
 
-            WorkingBeatmap beatmap() => Game.Beatmap.Value;
+            IWorkingBeatmap beatmap() => Game.Beatmap.Value;
 
-            PushAndConfirm(() => new TestPlaySongSelect());
+            Screens.Select.SongSelect songSelect = null;
+            PushAndConfirm(() => songSelect = new TestPlaySongSelect());
+            AddUntilStep("wait for song select", () => songSelect.BeatmapSetsLoaded);
 
-            AddStep("import beatmap", () => ImportBeatmapTest.LoadOszIntoOsu(Game, virtualTrack: true).Wait());
+            AddStep("import beatmap", () => BeatmapImportHelper.LoadOszIntoOsu(Game, virtualTrack: true).WaitSafely());
 
             AddUntilStep("wait for selected", () => !Game.Beatmap.IsDefault);
 
@@ -151,12 +214,12 @@ namespace osu.Game.Tests.Visual.Navigation
             AddUntilStep("wait for fail", () => player.HasFailed);
 
             AddUntilStep("wait for track stop", () => !Game.MusicController.IsPlaying);
-            AddAssert("Ensure time before preview point", () => Game.MusicController.CurrentTrack.CurrentTime < beatmap().Metadata.PreviewTime);
+            AddAssert("Ensure time before preview point", () => Game.MusicController.CurrentTrack.CurrentTime < beatmap().BeatmapInfo.Metadata.PreviewTime);
 
             pushEscape();
 
             AddUntilStep("wait for track playing", () => Game.MusicController.IsPlaying);
-            AddAssert("Ensure time wasn't reset to preview point", () => Game.MusicController.CurrentTrack.CurrentTime < beatmap().Metadata.PreviewTime);
+            AddAssert("Ensure time wasn't reset to preview point", () => Game.MusicController.CurrentTrack.CurrentTime < beatmap().BeatmapInfo.Metadata.PreviewTime);
         }
 
         [Test]
@@ -244,8 +307,9 @@ namespace osu.Game.Tests.Visual.Navigation
         [Test]
         public void TestModSelectInput()
         {
-            TestPlaySongSelect songSelect = null;
+            AddUntilStep("Wait for toolbar to load", () => Game.Toolbar.IsLoaded);
 
+            TestPlaySongSelect songSelect = null;
             PushAndConfirm(() => songSelect = new TestPlaySongSelect());
 
             AddStep("Show mods overlay", () => songSelect.ModSelectOverlay.Show());
@@ -257,7 +321,7 @@ namespace osu.Game.Tests.Visual.Navigation
                 InputManager.ReleaseKey(Key.ControlLeft);
             });
 
-            AddAssert("Ruleset changed to osu!taiko", () => Game.Toolbar.ChildrenOfType<ToolbarRulesetSelector>().Single().Current.Value.ID == 1);
+            AddAssert("Ruleset changed to osu!taiko", () => Game.Toolbar.ChildrenOfType<ToolbarRulesetSelector>().Single().Current.Value.OnlineID == 1);
 
             AddAssert("Mods overlay still visible", () => songSelect.ModSelectOverlay.State.Value == Visibility.Visible);
         }
@@ -265,8 +329,9 @@ namespace osu.Game.Tests.Visual.Navigation
         [Test]
         public void TestBeatmapOptionsInput()
         {
-            TestPlaySongSelect songSelect = null;
+            AddUntilStep("Wait for toolbar to load", () => Game.Toolbar.IsLoaded);
 
+            TestPlaySongSelect songSelect = null;
             PushAndConfirm(() => songSelect = new TestPlaySongSelect());
 
             AddStep("Show options overlay", () => songSelect.BeatmapOptionsOverlay.Show());
@@ -278,7 +343,7 @@ namespace osu.Game.Tests.Visual.Navigation
                 InputManager.ReleaseKey(Key.ControlLeft);
             });
 
-            AddAssert("Ruleset changed to osu!taiko", () => Game.Toolbar.ChildrenOfType<ToolbarRulesetSelector>().Single().Current.Value.ID == 1);
+            AddAssert("Ruleset changed to osu!taiko", () => Game.Toolbar.ChildrenOfType<ToolbarRulesetSelector>().Single().Current.Value.OnlineID == 1);
 
             AddAssert("Options overlay still visible", () => songSelect.BeatmapOptionsOverlay.State.Value == Visibility.Visible);
         }
@@ -286,6 +351,8 @@ namespace osu.Game.Tests.Visual.Navigation
         [Test]
         public void TestSettingsViaHotkeyFromMainMenu()
         {
+            AddUntilStep("Wait for toolbar to load", () => Game.Toolbar.IsLoaded);
+
             AddAssert("toolbar not displayed", () => Game.Toolbar.State.Value == Visibility.Hidden);
 
             AddStep("press settings hotkey", () =>
@@ -301,9 +368,10 @@ namespace osu.Game.Tests.Visual.Navigation
         [Test]
         public void TestToolbarHiddenByUser()
         {
-            AddStep("Enter menu", () => InputManager.Key(Key.Enter));
-
             AddUntilStep("Wait for toolbar to load", () => Game.Toolbar.IsLoaded);
+
+            AddStep("Enter menu", () => InputManager.Key(Key.Enter));
+            AddUntilStep("Toolbar is visible", () => Game.Toolbar.State.Value == Visibility.Visible);
 
             AddStep("Hide toolbar", () =>
             {
@@ -330,12 +398,12 @@ namespace osu.Game.Tests.Visual.Navigation
         [Test]
         public void TestPushMatchSubScreenAndPressBackButtonImmediately()
         {
-            TestMultiplayerScreenStack multiplayerScreenStack = null;
+            TestMultiplayerComponents multiplayerComponents = null;
 
-            PushAndConfirm(() => multiplayerScreenStack = new TestMultiplayerScreenStack());
+            PushAndConfirm(() => multiplayerComponents = new TestMultiplayerComponents());
 
-            AddUntilStep("wait for lounge", () => multiplayerScreenStack.ChildrenOfType<LoungeSubScreen>().SingleOrDefault()?.IsLoaded == true);
-            AddStep("open room", () => multiplayerScreenStack.ChildrenOfType<LoungeSubScreen>().Single().Open());
+            AddUntilStep("wait for lounge", () => multiplayerComponents.ChildrenOfType<LoungeSubScreen>().SingleOrDefault()?.IsLoaded == true);
+            AddStep("open room", () => multiplayerComponents.ChildrenOfType<LoungeSubScreen>().Single().Open());
             AddStep("press back button", () => Game.ChildrenOfType<BackButton>().First().Action());
             AddWaitStep("wait two frames", 2);
         }
@@ -418,6 +486,37 @@ namespace osu.Game.Tests.Visual.Navigation
             AddStep("Release escape", () => InputManager.ReleaseKey(Key.Escape));
             AddUntilStep("Wait for game exit", () => Game.ScreenStack.CurrentScreen == null);
             AddStep("test dispose doesn't crash", () => Game.Dispose());
+        }
+
+        private Func<Player> playToResults()
+        {
+            Player player = null;
+
+            IWorkingBeatmap beatmap() => Game.Beatmap.Value;
+
+            Screens.Select.SongSelect songSelect = null;
+            PushAndConfirm(() => songSelect = new TestPlaySongSelect());
+            AddUntilStep("wait for song select", () => songSelect.BeatmapSetsLoaded);
+
+            AddStep("import beatmap", () => BeatmapImportHelper.LoadQuickOszIntoOsu(Game).WaitSafely());
+
+            AddUntilStep("wait for selected", () => !Game.Beatmap.IsDefault);
+
+            AddStep("set mods", () => Game.SelectedMods.Value = new Mod[] { new OsuModNoFail(), new OsuModDoubleTime { SpeedChange = { Value = 2 } } });
+
+            AddStep("press enter", () => InputManager.Key(Key.Enter));
+
+            AddUntilStep("wait for player", () =>
+            {
+                // dismiss any notifications that may appear (ie. muted notification).
+                clickMouseInCentre();
+                return (player = Game.ScreenStack.CurrentScreen as Player) != null;
+            });
+
+            AddUntilStep("wait for track playing", () => beatmap().Track.IsRunning);
+            AddStep("seek to near end", () => player.ChildrenOfType<GameplayClockContainer>().First().Seek(beatmap().Beatmap.HitObjects[^1].StartTime - 1000));
+            AddUntilStep("wait for pass", () => (Game.ScreenStack.CurrentScreen as ResultsScreen)?.IsLoaded == true);
+            return () => player;
         }
 
         private void clickMouseInCentre()

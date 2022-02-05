@@ -2,6 +2,7 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using osu.Framework.Allocation;
 using osu.Framework.Extensions.Color4Extensions;
@@ -18,6 +19,7 @@ using osu.Game.Graphics.UserInterface;
 using osu.Game.Online;
 using osu.Game.Online.API;
 using osu.Game.Online.Multiplayer;
+using osu.Game.Online.Rooms;
 using osu.Game.Rulesets;
 using osu.Game.Screens.Play.HUD;
 using osu.Game.Users;
@@ -35,7 +37,7 @@ namespace osu.Game.Screens.OnlinePlay.Multiplayer.Participants
         private IAPIProvider api { get; set; }
 
         [Resolved]
-        private RulesetStore rulesets { get; set; }
+        private IRulesetStore rulesets { get; set; }
 
         private SpriteIcon crown;
 
@@ -184,9 +186,12 @@ namespace osu.Game.Screens.OnlinePlay.Multiplayer.Participants
 
             const double fade_time = 50;
 
-            var ruleset = rulesets.GetRuleset(Room.Settings.RulesetID).CreateInstance();
+            var currentItem = Playlist.GetCurrentItem();
+            Debug.Assert(currentItem != null);
 
-            int? currentModeRank = User.User?.RulesetsStatistics?.GetValueOrDefault(ruleset.ShortName)?.GlobalRank;
+            var ruleset = rulesets.GetRuleset(currentItem.RulesetID)?.CreateInstance();
+
+            int? currentModeRank = ruleset != null ? User.User?.RulesetsStatistics?.GetValueOrDefault(ruleset.ShortName)?.GlobalRank : null;
             userRankText.Text = currentModeRank != null ? $"#{currentModeRank.Value:N0}" : string.Empty;
 
             userStateDisplay.UpdateStatus(User.State, User.BeatmapAvailability);
