@@ -80,7 +80,7 @@ namespace osu.Game.Screens.Play.HUD
             base.LoadComplete();
         }
 
-        private float positionalAdjust;
+        private float positionalAdjust = 1; // Start at 1 to handle the case where a user never send positional input.
 
         protected override bool OnMouseMove(MouseMoveEvent e)
         {
@@ -116,7 +116,7 @@ namespace osu.Game.Screens.Play.HUD
             public Action HoverLost;
 
             [BackgroundDependencyLoader]
-            private void load(OsuColour colours, Framework.Game game)
+            private void load(OsuColour colours)
             {
                 Size = new Vector2(60);
 
@@ -208,6 +208,9 @@ namespace osu.Game.Screens.Play.HUD
 
             public bool OnPressed(KeyBindingPressEvent<GlobalAction> e)
             {
+                if (e.Repeat)
+                    return false;
+
                 switch (e.Action)
                 {
                     case GlobalAction.Back:
