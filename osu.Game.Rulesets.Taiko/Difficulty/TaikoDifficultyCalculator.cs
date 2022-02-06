@@ -79,7 +79,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double colourRating = colour.DifficultyValue() * colour_skill_multiplier;
             double rhythmRating = rhythm.DifficultyValue() * rhythm_skill_multiplier;
             double staminaRating = (staminaRight.DifficultyValue() + staminaLeft.DifficultyValue()) * stamina_skill_multiplier;
-            double readingRating = reading.DifficultyValue() * reading_skill_multiplier * reading_skill_penalty;
+            double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
+            readingRating *= readingSkillPenalty(readingRating, colourRating);
 
             double staminaPenalty = simpleColourPenalty(staminaRating, colourRating);
             double readingPenalty = readingSkillPenalty(readingRating, colourRating);
@@ -123,7 +124,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
        private double readingSkillPenalty(double readingDifficulty, double colorDifficulty)
        {
+           // This is probably just to scale color difficulty for this penalty, and is separate from color_skill_multiplier
+           // TODO: We probably want to tweak this value
+           double colorSkillScalar = 1.0;
 
+           return readingDifficulty * Math.Atan(colorDifficulty * colorSkillScalar) * 2 / Math.PI;
        }
     
 
