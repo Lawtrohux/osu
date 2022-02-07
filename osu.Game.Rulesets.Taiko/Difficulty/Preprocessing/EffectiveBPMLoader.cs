@@ -9,12 +9,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         private IBeatmap beatmap;
         private IList<TaikoDifficultyHitObject> hitObjects;
         private IReadOnlyList<TimingControlPoint> controlPoints;
+        private double beatmapGlobalSv = 1.0;
 
         public EffectiveBPMLoader(IBeatmap beatmap, List<TaikoDifficultyHitObject> hitObjects)
         {
             this.beatmap = beatmap;
             this.hitObjects = hitObjects;
             this.controlPoints = beatmap.ControlPointInfo.TimingPoints;
+            this.beatmapGlobalSv = beatmap.Difficulty.SliderMultiplier;
         }
 
         public void LoadEffectiveBPM()
@@ -35,7 +37,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
                     nextControlPoint = controlPointEnumerator.MoveNext() ? controlPointEnumerator.Current : null;
                 }
 
-                currentHitObject.EffectiveBPM = currentControlPoint.BPM;
+                currentHitObject.EffectiveBPM = currentControlPoint.BPM * beatmapGlobalSv;
             }
         }
     }
