@@ -37,7 +37,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
                     nextControlPoint = controlPointEnumerator.MoveNext() ? controlPointEnumerator.Current : null;
                 }
 
-                currentHitObject.EffectiveBPM = currentControlPoint.BPM * beatmapGlobalSv;
+                currentHitObject.EffectiveBPM = currentControlPoint.BPM * beatmapGlobalSv * currentHitObject.BaseObject.DifficultyControlPoint.SliderVelocity;
             }
         }
     }
