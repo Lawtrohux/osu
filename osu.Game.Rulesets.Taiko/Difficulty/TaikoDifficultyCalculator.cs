@@ -86,7 +86,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double readingPenalty = readingSkillPenalty(readingRating, colourRating);
             staminaRating *= staminaPenalty;
 
-            double combinedRating = locallyCombinedDifficulty(colour, rhythm, staminaRight, staminaLeft, staminaPenalty, reading, ReadingPenalty);
+            double combinedRating = locallyCombinedDifficulty(colour, rhythm, staminaRight, staminaLeft, staminaPenalty, reading, readingPenalty);
             double separatedRating = norm(1.5, colourRating, rhythmRating, staminaRating, readingRating);
             double starRating = 1.4 * separatedRating + 0.5 * combinedRating;
             starRating = rescale(starRating);
@@ -146,7 +146,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// For each section, the peak strains of all separate skills are combined into a single peak strain for the section.
         /// The resulting partial rating of the beatmap is a weighted sum of the combined peaks (higher peaks are weighted more).
         /// </remarks>
-        private double locallyCombinedDifficulty(Colour colour, Rhythm rhythm, Stamina staminaRight, Stamina staminaLeft, double staminaPenalty, Reading reading)
+        private double locallyCombinedDifficulty(Colour colour, Rhythm rhythm, Stamina staminaRight, Stamina staminaLeft, double staminaPenalty, Reading reading, double readingPenalty)
         {
             List<double> peaks = new List<double>();
 
@@ -161,7 +161,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 double colourPeak = colourPeaks[i] * colour_skill_multiplier;
                 double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
                 double staminaPeak = (staminaRightPeaks[i] + staminaLeftPeaks[i]) * stamina_skill_multiplier * staminaPenalty;
-                double readingPeak = (readingPeaks[i] * reading_skill_multiplier) * reading_skill_penalty;
+                double readingPeak = (readingPeaks[i] * reading_skill_multiplier) * readingPenalty;
                 peaks.Add(norm(2, colourPeak, rhythmPeak, staminaPeak, readingPeak));
             }
 

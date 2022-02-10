@@ -18,6 +18,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         [JsonProperty("colour_difficulty")]
         public double ColourDifficulty { get; set; }
 
+        [JsonProperty("reading_difficulty")]
+        public double ReadingDifficulty { get; set; }
+
         [JsonProperty("approach_rate")]
         public double ApproachRate { get; set; }
 
