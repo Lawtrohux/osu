@@ -48,9 +48,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// </summary>
         private int notesSinceRhythmChange;
 
-        public Rhythm(Mod[] mods)
+        private double greatHitWindow;
+
+        public Rhythm(Mod[] mods, double greatHitWindow)
             : base(mods)
         {
+            this.greatHitWindow = greatHitWindow;
         }
 
         protected override double StrainValueOf(DifficultyHitObject current)
@@ -78,12 +81,25 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             objectStrain *= repetitionPenalties(hitObject);
             objectStrain *= patternLengthPenalty(notesSinceRhythmChange);
             objectStrain *= speedPenalty(hitObject.DeltaTime);
+            objectStrain *= leniencyPenalty(hitObject);
 
             // careful - needs to be done here since calls above read this value
             notesSinceRhythmChange = 0;
 
             currentStrain += objectStrain;
             return currentStrain;
+        }
+
+        private double leniencyPenalty(TaikoDifficultyHitObject hitObject)
+        {
+            double leniency = greatHitWindow / hitObject.DeltaTime;
+            double penalty = sigmoid(leniency, 0.3, 0.2) * 0.1 + 0.9;
+            return penalty;
+        }
+
+        private double sigmoid(double val, double center, double width)
+        {
+            return Math.Tanh(Math.E * -(val - center) / width);
         }
 
         /// <summary>
