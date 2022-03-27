@@ -36,7 +36,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         /// </summary>
         public bool Equals(TaikoDifficultyHitObjectRhythm other)
         {
-            return Math.Abs(other.Ratio - Ratio) < 0.01;
+            return Math.Abs(other.Ratio - Ratio) < 0.05;
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             for (int i = 1; i < 8; ++i)
             {
                 double currentTermMultiplier = termMultiplier(i);
-                difficulty += termPenalty(ratio, i, 8, currentTermMultiplier);
+                difficulty += termPenalty(ratio, i, 2, currentTermMultiplier);
                 multiplierSum += currentTermMultiplier;
             }
             difficulty += multiplierSum;
@@ -63,13 +63,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             // difficulty += speedUpBonus(ratio, 1.05, 10, 1);
 
             // Give bonus to near-1 ratios
-            difficulty += targetedBonus(ratio, 1, 0.5, 2);
+            difficulty += targetedBonus(ratio, 1, 0.5, 1);
 
             // Penalize ratios that are VERY near 1
-            difficulty -= targetedBonus(ratio, 1, 0.01, 2);
+            difficulty -= targetedBonus(ratio, 1, 0.1, 1);
 
             // Final multiplier
-            difficulty *= 0.5;
+            // difficulty *= 0.5;
 
             return difficulty;
         }
@@ -97,7 +97,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         /// </summary>
         private double termMultiplier(int denominator)
         {
-            return 0.25;
+            switch (denominator)
+            {
+                case 2:
+                    return 0.2;
+                case 3:
+                    return 0.15;
+                default:
+                    return 0.1;
+            }
         }
 
         /// <summary>
