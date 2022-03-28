@@ -22,6 +22,7 @@ using osu.Framework.Logging;
 using osu.Framework.Platform;
 using osu.Game.Audio;
 using osu.Game.Beatmaps;
+using osu.Game.Beatmaps.Formats;
 using osu.Game.Configuration;
 using osu.Game.Database;
 using osu.Game.Graphics;
@@ -52,6 +53,8 @@ namespace osu.Game
     /// </summary>
     public partial class OsuGameBase : Framework.Game, ICanAcceptFiles
     {
+        public const string OSU_PROTOCOL = "osu://";
+
         public const string CLIENT_STREAM_NAME = @"lazer";
 
         public const int SAMPLE_CONCURRENCY = 6;
@@ -66,7 +69,7 @@ namespace osu.Game
         /// </summary>
         private const double global_track_volume_adjust = 0.8;
 
-        public bool UseDevelopmentServer { get; }
+        public virtual bool UseDevelopmentServer => DebugUtils.IsDebugBuild;
 
         public virtual Version AssemblyVersion => Assembly.GetEntryAssembly()?.GetName().Version ?? new Version();
 
@@ -109,7 +112,7 @@ namespace osu.Game
 
         protected SkinManager SkinManager { get; private set; }
 
-        protected RulesetStore RulesetStore { get; private set; }
+        protected RealmRulesetStore RulesetStore { get; private set; }
 
         protected RealmKeyBindingStore KeyBindingStore { get; private set; }
 
@@ -174,7 +177,6 @@ namespace osu.Game
 
         public OsuGameBase()
         {
-            UseDevelopmentServer = DebugUtils.IsDebugBuild;
             Name = @"osu!";
         }
 
@@ -198,10 +200,12 @@ namespace osu.Game
             if (Storage.Exists(DatabaseContextFactory.DATABASE_NAME))
                 dependencies.Cache(EFContextFactory = new DatabaseContextFactory(Storage));
 
-            dependencies.Cache(realm = new RealmAccess(Storage, "client", EFContextFactory));
+            dependencies.Cache(realm = new RealmAccess(Storage, "client", Host.UpdateThread, EFContextFactory));
 
-            dependencies.Cache(RulesetStore = new RulesetStore(realm, Storage));
+            dependencies.CacheAs<RulesetStore>(RulesetStore = new RealmRulesetStore(realm, Storage));
             dependencies.CacheAs<IRulesetStore>(RulesetStore);
+
+            Decoder.RegisterDependencies(RulesetStore);
 
             // Backup is taken here rather than in EFToRealmMigrator to avoid recycling realm contexts
             // after initial usages below. It can be moved once a direction is established for handling re-subscription.
@@ -413,7 +417,7 @@ namespace osu.Game
                 Scheduler.AddDelayed(GracefullyExit, 2000);
         }
 
-        public void Migrate(string path)
+        public bool Migrate(string path)
         {
             Logger.Log($@"Migrating osu! data from ""{Storage.GetFullPath(string.Empty)}"" to ""{path}""...");
 
@@ -432,14 +436,15 @@ namespace osu.Game
 
                 readyToRun.Wait();
 
-                (Storage as OsuStorage)?.Migrate(Host.GetStorage(path));
+                bool? cleanupSucceded = (Storage as OsuStorage)?.Migrate(Host.GetStorage(path));
+
+                Logger.Log(@"Migration complete!");
+                return cleanupSucceded != false;
             }
             finally
             {
                 realmBlocker?.Dispose();
             }
-
-            Logger.Log(@"Migration complete!");
         }
 
         protected override UserInputManager CreateUserInputManager() => new OsuUserInputManager();
