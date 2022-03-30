@@ -53,7 +53,7 @@ namespace osu.Game.Rulesets.Mania
 
         public override IBeatmapConverter CreateBeatmapConverter(IBeatmap beatmap) => new ManiaBeatmapConverter(beatmap, this);
 
-        public override PerformanceCalculator CreatePerformanceCalculator(DifficultyAttributes attributes, ScoreInfo score) => new ManiaPerformanceCalculator(this, attributes, score);
+        public override PerformanceCalculator CreatePerformanceCalculator() => new ManiaPerformanceCalculator();
 
         public const string SHORT_NAME = "mania";
 
@@ -258,6 +258,7 @@ namespace osu.Game.Rulesets.Mania
                     {
                         new MultiMod(new ModWindUp(), new ModWindDown()),
                         new ManiaModMuted(),
+                        new ModAdaptiveSpeed()
                     };
 
                 default:
@@ -370,6 +371,17 @@ namespace osu.Game.Rulesets.Mania
             {
                 Columns = new[]
                 {
+                    new StatisticItem("Performance Breakdown", () => new PerformanceBreakdownChart(score, playableBeatmap)
+                    {
+                        RelativeSizeAxes = Axes.X,
+                        AutoSizeAxes = Axes.Y
+                    }),
+                }
+            },
+            new StatisticRow
+            {
+                Columns = new[]
+                {
                     new StatisticItem("Timing Distribution", () => new HitEventTimingDistributionGraph(score.HitEvents)
                     {
                         RelativeSizeAxes = Axes.X,
@@ -383,6 +395,7 @@ namespace osu.Game.Rulesets.Mania
                 {
                     new StatisticItem(string.Empty, () => new SimpleStatisticTable(3, new SimpleStatisticItem[]
                     {
+                        new AverageHitError(score.HitEvents),
                         new UnstableRate(score.HitEvents)
                     }), true)
                 }
