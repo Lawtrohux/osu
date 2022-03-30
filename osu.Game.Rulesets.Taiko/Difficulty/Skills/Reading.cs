@@ -1,3 +1,6 @@
+// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+// See the LICENCE file in the repository root for full licence text.
+
 using System;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
@@ -15,10 +18,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private const double highSvUpperBound = 320;
 
         private const double centreHigh = (highSvUpperBound - highSvLowerBound) / 360;
+
         private const double centreLow = (lowSvUpperBound - lowSvLowerBound) / 360;
         // Centre is the bpm corresponding to 0, so we need to subtract it from the bpm
 
         private const double scHigh = 4 * 180 / (highSvUpperBound - highSvLowerBound);
+
         private const double scLow = 4 * 180 / (lowSvUpperBound - lowSvLowerBound);
         // SC is used to normalize the domain so the value of the final function visibly changes in the range defined by [bpmL,bpmR]
 
@@ -29,7 +34,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private const double highSvMultiplier = 0.2;
         private const double lowSvMultiplier = 0.2;
 
-        public Reading(Mod[] mods) : base(mods)
+        public Reading(Mod[] mods)
+            : base(mods)
         {
         }
 
