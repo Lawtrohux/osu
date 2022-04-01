@@ -108,9 +108,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 RhythmDifficulty = rhythmRating,
                 ColourDifficulty = colourRating,
                 ReadingDifficulty = readingRating,
-
                 GreatHitWindow = this.greatHitWindow,
-
                 MaxCombo = beatmap.HitObjects.Count(h => h is Hit),
             };
         }
