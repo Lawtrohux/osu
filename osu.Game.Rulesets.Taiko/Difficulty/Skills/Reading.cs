@@ -1,3 +1,6 @@
+// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+// See the LICENCE file in the repository root for full licence text.
+
 using System;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
@@ -13,7 +16,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private const double highSvMultiplier = 0.2;
         private const double lowSvMultiplier = 0.2;
 
-        public Reading(Mod[] mods) : base(mods)
+        public Reading(Mod[] mods)
+            : base(mods)
         {
         }
 

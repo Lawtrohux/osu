@@ -36,12 +36,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
-            this.greatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate;
+            greatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate;
 
             return new Skill[]
             {
                 new Colour(mods),
-                new Rhythm(mods, this.greatHitWindow),
+                new Rhythm(mods, greatHitWindow),
                 new Stamina(mods, true),
                 new Stamina(mods, false),
                 new Reading(mods),
@@ -70,7 +70,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             }
 
             new StaminaCheeseDetector(taikoDifficultyHitObjects).FindCheese();
-            new EffectiveBPMLoader(this.Beatmap, taikoDifficultyHitObjects).LoadEffectiveBPM();
+            new EffectiveBPMLoader(Beatmap, taikoDifficultyHitObjects).LoadEffectiveBPM();
             return taikoDifficultyHitObjects;
         }
 
@@ -89,10 +89,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double rhythmRating = rhythm.DifficultyValue() * rhythm_skill_multiplier;
             double staminaRating = (staminaRight.DifficultyValue() + staminaLeft.DifficultyValue()) * stamina_skill_multiplier;
             double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
-            readingRating *= readingSkillPenalty(readingRating, colourRating);
 
             double staminaPenalty = simpleColourPenalty(staminaRating, colourRating);
             double readingPenalty = readingSkillPenalty(readingRating, colourRating);
+
+            readingRating *= readingSkillPenalty(readingRating, colourRating);
             staminaRating *= staminaPenalty;
 
             double combinedRating = locallyCombinedDifficulty(colour, rhythm, staminaRight, staminaLeft, staminaPenalty, reading, readingPenalty);
@@ -120,23 +121,20 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// Some maps (especially converts) can be easy to read despite a high note density.
         /// This penalty aims to reduce the star rating of such maps by factoring in colour difficulty to the stamina skill.
         /// </remarks>
-        private double simpleColourPenalty(double staminaDifficulty, double colorDifficulty)
+        private double simpleColourPenalty(double staminaDifficulty, double colourDifficulty)
         {
-            if (colorDifficulty <= 0) return 0.79 - 0.25;
+            if (colourDifficulty <= 0) return 0.79 - 0.25;
 
-            return 0.79 - Math.Atan(staminaDifficulty / colorDifficulty - 12) / Math.PI / 2;
+            return colourSkillScaler * 0.79 - Math.Atan(staminaDifficulty / colourDifficulty - 12) / Math.PI / 2;
         }
 
+        // The SkillScalers are meant to provide the fixed value above 1, allowing more control over penalties.
+        double colourSkillScaler = colour_skill_multiplier * 100;
 
-       private double readingSkillPenalty(double readingDifficulty, double colorDifficulty)
-       {
-           // This is probably just to scale color difficulty for this penalty, and is separate from color_skill_multiplier
-           // TODO: We probably want to tweak this value
-           double colorSkillScalar = 1.0;
-
-           return readingDifficulty * Math.Atan(colorDifficulty * colorSkillScalar) * 2 / Math.PI;
-       }
-    
+        private double readingSkillPenalty(double readingDifficulty, double colourDifficulty)
+        {
+            return readingDifficulty * Math.Atan(colourDifficulty * colourSkillScaler) * 2 / Math.PI;
+        }
 
         /// <summary>
         /// Returns the <i>p</i>-norm of an <i>n</i>-dimensional vector.
