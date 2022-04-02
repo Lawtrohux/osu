@@ -20,23 +20,32 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         protected override double StrainValueOf(DifficultyHitObject current)
         {
             TaikoDifficultyHitObject taikoDifficultyHitObject = (TaikoDifficultyHitObject)current;
-            return svBonus(taikoDifficultyHitObject.EffectiveBPM);
+            return svBonus(taikoDifficultyHitObject);
         }
 
-        private double svBonus(double sv)
+        private double svBonus(TaikoDifficultyHitObject current)
         {
             const double highSvUpperBound = 320;
             const double highSvLowerBound = 240;
             const double highSvCenter = (highSvUpperBound + highSvLowerBound) / 2;
             const double highSvWidth = highSvUpperBound - highSvLowerBound;
 
-            const double lowSvUpperBound = 90;
-            const double lowSvLowerBound = 0;
-            const double lowSvCenter = (lowSvUpperBound + lowSvLowerBound) / 2;
-            const double lowSvWidth = lowSvUpperBound - lowSvLowerBound;
+            // Center and width of delta time range for low sv calculation. We use delta time to determine density. The
+            // lower the delta time (higher density), the higher the low sv bonus center. i.e. higher density = low sv 
+            // bonus starts at higher sv
+            const double lowSvDeltaTimeCenter = 150;
+            const double lowSvDeltaTimeWidth = 250;
+            // Maximum center for low sv (for high density)
+            const double lowSvCenterUpperBound = 90;
+            // Minimum center for low sv (for low density)
+            const double lowSvCenterLowerBound = 50;
 
-            double highSvBonus = this.sigmoid(sv, highSvCenter, highSvWidth);
-            double lowSvBonus = 1 - this.sigmoid(sv, lowSvCenter, lowSvWidth);
+            const double lowSvWidth = 80;
+            // Calculate low sv center, considering density
+            double lowSvCenter = lowSvCenterUpperBound - (lowSvCenterUpperBound - lowSvCenterLowerBound) * this.sigmoid(current.DeltaTime, lowSvDeltaTimeCenter, lowSvDeltaTimeWidth);
+
+            double highSvBonus = this.sigmoid(current.EffectiveBPM, highSvCenter, highSvWidth);
+            double lowSvBonus = 1 - this.sigmoid(current.EffectiveBPM, lowSvCenter, lowSvWidth);
 
             return 1 + highSvMultiplier * highSvBonus + lowSvMultiplier * lowSvBonus;
         }
