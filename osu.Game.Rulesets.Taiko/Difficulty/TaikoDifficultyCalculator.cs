@@ -23,7 +23,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private const double rhythm_skill_multiplier = 0.014;
         private const double colour_skill_multiplier = 0.01;
         private const double stamina_skill_multiplier = 0.02;
-        private const double reading_skill_multiplier = 0.012;
+        private const double reading_skill_multiplier = 0.02;
 
         private double greatHitWindow = 0;
 
