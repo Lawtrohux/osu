@@ -16,7 +16,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </summary>
     public class Rhythm : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 10;
+        protected override double SkillMultiplier => 3.2;
         protected override double StrainDecayBase => 0;
 
         /// <summary>
@@ -48,9 +48,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// </summary>
         private int notesSinceRhythmChange;
 
-        public Rhythm(Mod[] mods)
+        private double greatHitWindow;
+
+        public Rhythm(Mod[] mods, double greatHitWindow)
             : base(mods)
         {
+            this.greatHitWindow = greatHitWindow;
         }
 
         protected override double StrainValueOf(DifficultyHitObject current)
@@ -67,23 +70,33 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             TaikoDifficultyHitObject hitObject = (TaikoDifficultyHitObject)current;
             notesSinceRhythmChange += 1;
 
-            // rhythm difficulty zero (due to rhythm not changing) => no rhythm strain.
-            if (hitObject.Rhythm.Difficulty == 0.0)
-            {
-                return 0.0;
-            }
-
             double objectStrain = hitObject.Rhythm.Difficulty;
 
-            objectStrain *= repetitionPenalties(hitObject);
-            objectStrain *= patternLengthPenalty(notesSinceRhythmChange);
+            // objectStrain *= repetitionPenalties(hitObject);
+            // objectStrain *= patternLengthPenalty(notesSinceRhythmChange);
             objectStrain *= speedPenalty(hitObject.DeltaTime);
+            objectStrain *= leniencyPenalty(hitObject);
 
             // careful - needs to be done here since calls above read this value
-            notesSinceRhythmChange = 0;
+            if (Math.Abs(hitObject.Rhythm.Ratio - 1) < 0.04)
+            {
+                notesSinceRhythmChange = 0;
+            }
 
             currentStrain += objectStrain;
             return currentStrain;
+        }
+
+        private double leniencyPenalty(TaikoDifficultyHitObject hitObject)
+        {
+            double leniency = greatHitWindow / hitObject.DeltaTime;
+            double penalty = sigmoid(leniency, 0.4, 0.3) * 0.2 + 0.8;
+            return penalty;
+        }
+
+        private double sigmoid(double val, double center, double width)
+        {
+            return Math.Tanh(Math.E * -(val - center) / width);
         }
 
         /// <summary>
@@ -123,7 +136,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         {
             for (int i = 0; i < mostRecentPatternsToCompare; i++)
             {
-                if (rhythmHistory[start + i].Rhythm != rhythmHistory[rhythmHistory.Count - mostRecentPatternsToCompare + i].Rhythm)
+                if (!rhythmHistory[start + i].Rhythm.Equals(rhythmHistory[rhythmHistory.Count - mostRecentPatternsToCompare + i].Rhythm))
                     return false;
             }
 
@@ -141,11 +154,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// Both rare and frequent rhythm changes are penalised.
         /// </summary>
         /// <param name="patternLength">Number of notes since the last rhythm change.</param>
-        private static double patternLengthPenalty(int patternLength)
+        private double patternLengthPenalty(int patternLength)
         {
-            double shortPatternPenalty = Math.Min(0.15 * patternLength, 1.0);
+            // double shortPatternPenalty = -sigmoid(patternLength, 2, 1.6) * 0.5 + 0.5;
+            double shortPatternPenalty = Math.Min(0.2 + 0.2 * patternLength, 1.0);
             double longPatternPenalty = Math.Clamp(2.5 - 0.15 * patternLength, 0.0, 1.0);
-            return Math.Min(shortPatternPenalty, longPatternPenalty);
+            return shortPatternPenalty;
+            // return Math.Min(shortPatternPenalty, longPatternPenalty);
         }
 
         /// <summary>
