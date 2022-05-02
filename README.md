@@ -27,7 +27,7 @@ We are accepting bug reports (please report with as much detail as possible and 
 
 ## Running osu!
 
-If you are looking to install or test osu! without setting up a development environment, you can consume our [binary releases](https://github.com/ppy/osu/releases). Handy links below will download the latest version for your operating system of choice:
+If you are looking to install or **test** osu! without setting up a development environment, you can consume our [binary releases](https://github.com/ppy/osu/releases). Handy links below will download the latest version for your operating system of choice:
 
 **Latest build:**
 
