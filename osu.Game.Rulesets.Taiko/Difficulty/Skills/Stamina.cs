@@ -68,7 +68,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </remarks>
     public class Stamina : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 0.51;
+        protected override double SkillMultiplier => 0.225;
         protected override double StrainDecayBase => 0.4;
 
         private NoteIntervalManager noteIntervalManager = new NoteIntervalManager();
@@ -123,7 +123,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// <param name="notePairDuration">The duration between the current and previous note hit using the same finger.</param>
         private double speedBonus(double notePairDuration)
         {
-            return Math.Min(250 / notePairDuration, 4);
+            return Math.Min(1000 / notePairDuration, 4);
             // if (notePairDuration >= 200) return 0;
 
             // double bonus = 200 - notePairDuration;

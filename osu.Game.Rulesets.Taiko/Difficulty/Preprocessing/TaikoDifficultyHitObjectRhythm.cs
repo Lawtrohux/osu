@@ -100,12 +100,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         {
             switch (denominator)
             {
+                case 1: 
+                    return 0.16;
                 case 2:
                     return 0.15;
                 case 3:
-                    return 0.12;
+                    return 0.4;
                 default:
-                    return 0.1 / denominator;
+                    return 0.8 / Math.Pow(denominator, 2);
             }
         }
 
