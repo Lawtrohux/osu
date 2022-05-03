@@ -20,9 +20,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
-        private const double rhythm_skill_multiplier = 0.014;
+        private const double rhythm_skill_multiplier = 0.013;
         private const double colour_skill_multiplier = 0.01;
-        private const double stamina_skill_multiplier = 0.021;
+        private const double stamina_skill_multiplier = 0.022;
 
         private double greatHitWindow = 0;
 
@@ -155,14 +155,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             }
 
             double difficulty = 0;
-            double weight = 1;
+            double weight = 4;
 
             foreach (double strain in peaks.OrderByDescending(d => d))
             {
-                difficulty += strain * weight;
-                weight *= 0.9;
+                difficulty += strain * (1 / weight);
+                weight += 1;
             }
 
+            difficulty = difficulty * 2.5;
             return difficulty;
         }
 
