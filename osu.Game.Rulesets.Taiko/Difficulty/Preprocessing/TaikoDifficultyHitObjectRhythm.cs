@@ -21,14 +21,22 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         /// </summary>
         public readonly double Ratio;
 
+        public readonly double Leniency;
+
+
         /// <summary>
         /// Creates an object representing a rhythm change. Difficulty is calculated from the ratio.
         /// </summary>
         /// <param name="ratio">Ratio of current interval to previous interval</param>
-        public TaikoDifficultyHitObjectRhythm(double ratio)
+        /// <param name="greatHitWindow">Great hit window of the beatmap</param>
+        /// <param name="pastInterval">Interval between this and previous note</param>
+        /// <param name="futureInterval">Interval between this and next note</param>
+        public TaikoDifficultyHitObjectRhythm(double ratio, double greatHitWindow, double pastInterval, double futureInterval)
         {
             Ratio = ratio;
             Difficulty = difficultyFromRatio(ratio);
+            this.Leniency = greatHitWindow / Math.Min(pastInterval, futureInterval);
+            // Console.WriteLine(this.Leniency);
         }
 
         /// <summary>
@@ -100,14 +108,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         {
             switch (denominator)
             {
-                case 1: 
-                    return 0.16;
+                case 1:
+                    return 0.14;
                 case 2:
-                    return 0.15;
+                    return 0.1;
                 case 3:
-                    return 0.12;
+                    return 0.18;
                 default:
-                    return 0.8 / Math.Pow(denominator, 2);
+                    return 2 / Math.Pow(denominator, 2);
             }
         }
 

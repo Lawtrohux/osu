@@ -16,7 +16,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </summary>
     public class Rhythm : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 2.3;
+        protected override double SkillMultiplier => 3;
         protected override double StrainDecayBase => 0;
 
         /// <summary>
@@ -89,8 +89,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
         private double leniencyPenalty(TaikoDifficultyHitObject hitObject)
         {
-            double leniency = greatHitWindow / hitObject.DeltaTime;
-            double penalty = sigmoid(leniency, 0.2, 0.2) * 0.3 + 0.7;
+            double penalty = sigmoid(hitObject.Rhythm.Leniency, 0.5, 0.4) * 0.5 + 0.5;
             return penalty;
         }
 
@@ -169,11 +168,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// <param name="deltaTime">Time (in milliseconds) since the last hit object.</param>
         private double speedPenalty(double deltaTime)
         {
-            if (deltaTime < 80) return 1;
-            if (deltaTime < 210) return Math.Max(0, 1.4 - 0.005 * deltaTime);
+            if(deltaTime > 300) {
+                resetRhythmAndStrain();
+            }
 
-            resetRhythmAndStrain();
-            return 0.0;
+            return sigmoid(deltaTime, 160, 180) * 0.5 + 0.5;
+            // if (deltaTime < 80) return 1;
+            // if (deltaTime < 210) return Math.Max(0, 1.4 - 0.005 * deltaTime);
+
+            // resetRhythmAndStrain();
+            // return 0.0;
         }
 
         /// <summary>

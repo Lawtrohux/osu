@@ -39,14 +39,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         /// <param name="hitObject">The gameplay <see cref="HitObject"/> associated with this difficulty object.</param>
         /// <param name="lastObject">The gameplay <see cref="HitObject"/> preceding <paramref name="hitObject"/>.</param>
         /// <param name="lastLastObject">The gameplay <see cref="HitObject"/> preceding <paramref name="lastObject"/>.</param>
+        /// <param name="nextObject">The gameplay <see cref="HitObject"/> next.</param>
+        /// <param name="greatHitWindow">Great hit window of the beatmap.</param>
         /// <param name="clockRate">The rate of the gameplay clock. Modified by speed-changing mods.</param>
         /// <param name="objectIndex">The index of the object in the beatmap.</param>
-        public TaikoDifficultyHitObject(HitObject hitObject, HitObject lastObject, HitObject lastLastObject, double clockRate, int objectIndex)
+        public TaikoDifficultyHitObject(
+            HitObject hitObject, HitObject lastObject, HitObject lastLastObject, HitObject nextObject, double greatHitWindow, double clockRate, int objectIndex)
             : base(hitObject, lastObject, clockRate)
         {
             var currentHit = hitObject as Hit;
 
-            Rhythm = createRhythmChange(lastObject, lastLastObject, clockRate);
+            Rhythm = createRhythmChange(lastObject, lastLastObject, nextObject, greatHitWindow, clockRate);
             HitType = currentHit?.Type;
 
             ObjectIndex = objectIndex;
@@ -57,13 +60,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         /// </summary>
         /// <param name="lastObject">The gameplay <see cref="HitObject"/> preceding this one.</param>
         /// <param name="lastLastObject">The gameplay <see cref="HitObject"/> preceding <paramref name="lastObject"/>.</param>
+        /// <param name="nextObject">The gameplay <see cref="HitObject"/> next.</param>
+        /// <param name="greatHitWindow">Great hit window of the beatmap.</param>
         /// <param name="clockRate">The rate of the gameplay clock.</param>
-        private TaikoDifficultyHitObjectRhythm createRhythmChange(HitObject lastObject, HitObject lastLastObject, double clockRate)
+        private TaikoDifficultyHitObjectRhythm createRhythmChange(
+            HitObject lastObject, HitObject lastLastObject, HitObject nextObject, double greatHitWindow, double clockRate)
         {
             double prevLength = (lastObject.StartTime - lastLastObject.StartTime) / clockRate;
             double ratio = DeltaTime / prevLength;
 
-            return new TaikoDifficultyHitObjectRhythm(ratio);
+            return new TaikoDifficultyHitObjectRhythm(ratio, greatHitWindow, nextObject.StartTime - BaseObject.StartTime, DeltaTime);
         }
     }
 }
