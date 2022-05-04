@@ -16,7 +16,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </summary>
     public class Rhythm : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 2.1;
+        protected override double SkillMultiplier => 2.3;
         protected override double StrainDecayBase => 0;
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private double leniencyPenalty(TaikoDifficultyHitObject hitObject)
         {
             double leniency = greatHitWindow / hitObject.DeltaTime;
-            double penalty = sigmoid(leniency, 0.4, 0.3) * 0.2 + 0.8;
+            double penalty = sigmoid(leniency, 0.2, 0.2) * 0.3 + 0.7;
             return penalty;
         }
 
@@ -147,7 +147,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// Calculates a single rhythm repetition penalty.
         /// </summary>
         /// <param name="notesSince">Number of notes since the last repetition of a rhythm change.</param>
-        private static double repetitionPenalty(int notesSince) => Math.Min(1.0, 0.032 * notesSince);
+        private static double repetitionPenalty(int notesSince) => Math.Min(1.0, 0.06 * notesSince);
 
         /// <summary>
         /// Calculates a penalty based on the number of notes since the last rhythm change.
@@ -157,7 +157,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private double patternLengthPenalty(int patternLength)
         {
             // double shortPatternPenalty = -sigmoid(patternLength, 2, 1.6) * 0.5 + 0.5;
-            double shortPatternPenalty = Math.Min(0.2 + 0.2 * patternLength, 1.0);
+            double shortPatternPenalty = Math.Min(0.15 * patternLength, 1.0);
             double longPatternPenalty = Math.Clamp(2.5 - 0.15 * patternLength, 0.0, 1.0);
             return shortPatternPenalty;
             // return Math.Min(shortPatternPenalty, longPatternPenalty);

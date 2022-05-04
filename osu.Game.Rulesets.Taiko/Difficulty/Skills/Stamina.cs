@@ -12,51 +12,49 @@ using osu.Game.Rulesets.Taiko.Objects;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 {
-    class NoteIntervalManager
+    class SingleKeyStamina
     {
-        /// <summary>
-        /// Maximum number of entries to keep in interval histories/>.
-        /// </summary>
         private const int max_history_length = 2;
 
-        /// <summary>
-        /// We assume notes of the same color is always alternated, hence having the highest possible hit interval per finger.
-        /// Finger hit delta time stored are d1, d2, k1, k2, in that order.
-        ///
-        /// TODO: Is there a prettier way to do this?
-        /// </summary>
-        private LimitedCapacityQueue<double>[] noteIntervalHistories = new[] {
-            new LimitedCapacityQueue<double>(max_history_length),
-            new LimitedCapacityQueue<double>(max_history_length),
-            new LimitedCapacityQueue<double>(max_history_length),
-            new LimitedCapacityQueue<double>(max_history_length)
-        };
-        private double[] previousHitTime = { 0, 0, 0, 0 };
-        private int donIndex = 1;
-        private int katIndex = 3;
+        private LimitedCapacityQueue<double> IntervalHistory = new LimitedCapacityQueue<double>(max_history_length);
+        private double PreviousHitTime = -1;
+        private double CurrentStrain = 0;
+        private double StrainDecayBase = 0.4;
 
-        private LimitedCapacityQueue<double> hit(TaikoDifficultyHitObject current, int indexOffset)
+        private double StrainValueOf(DifficultyHitObject current)
         {
-            noteIntervalHistories[indexOffset].Enqueue(previousHitTime[indexOffset] == 0 ? double.MaxValue : current.StartTime - previousHitTime[indexOffset]);
-            previousHitTime[indexOffset] = current.StartTime;
-            return noteIntervalHistories[indexOffset];
-        }
-
-        /// <summary>
-        /// Calculates and returns note interval history for the current hitting finger
-        /// </summary>
-        public LimitedCapacityQueue<double> hit(TaikoDifficultyHitObject current)
-        {
-            if (current.HitType == HitType.Centre)
+            if (PreviousHitTime == -1)
             {
-                donIndex = donIndex == 0 ? 1 : 0;
-                return hit(current, donIndex);
+                PreviousHitTime = current.StartTime;
+                return 0;
             }
             else
             {
-                katIndex = katIndex == 2 ? 3 : 2;
-                return hit(current, katIndex);
+                double objectStrain = 0.1;
+                IntervalHistory.Enqueue(current.StartTime - PreviousHitTime);
+                PreviousHitTime = current.StartTime;
+                objectStrain += speedBonus(IntervalHistory.Min());
+                return objectStrain;
             }
+        }
+
+        public double StrainValueAt(DifficultyHitObject current)
+        {
+            CurrentStrain *= strainDecay(current.StartTime - PreviousHitTime);
+            CurrentStrain += StrainValueOf(current);
+
+            return CurrentStrain;
+        }
+
+        private double strainDecay(double ms) => Math.Pow(StrainDecayBase, ms / 1000);
+
+        /// <summary>
+        /// Applies a speed bonus dependent on the time since the last hit performed using this key.
+        /// </summary>
+        /// <param name="notePairDuration">The duration between the current and previous note hit using the same key.</param>
+        private double speedBonus(double notePairDuration)
+        {
+            return Math.Min(100 / notePairDuration, 2);
         }
     }
 
@@ -68,10 +66,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </remarks>
     public class Stamina : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 0.225;
-        protected override double StrainDecayBase => 0.4;
+        protected override double SkillMultiplier => 4.35;
+        protected override double StrainDecayBase => 0;
 
-        private NoteIntervalManager noteIntervalManager = new NoteIntervalManager();
+        private SingleKeyStamina[] keyStamina = new SingleKeyStamina[4] {
+            new SingleKeyStamina(),
+            new SingleKeyStamina(),
+            new SingleKeyStamina(),
+            new SingleKeyStamina()
+        };
+        private int donIndex = 1;
+        private int katIndex = 3;
 
         /// <summary>
         /// Creates a <see cref="Stamina"/> skill.
@@ -82,6 +87,28 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         {
         }
 
+        private SingleKeyStamina getNextSingleKeyStamina(TaikoDifficultyHitObject current)
+        {
+            if (current.HitType == HitType.Centre)
+            {
+                donIndex = donIndex == 0 ? 1 : 0;
+                // Console.Write(donIndex + ",");
+                return keyStamina[donIndex];
+            }
+            else
+            {
+                katIndex = katIndex == 2 ? 3 : 2;
+                // Console.Write(katIndex + ",");
+                return keyStamina[katIndex];
+            }
+        }
+
+        // This is the same sigmoid as the one in Rhythm, might want to unify these
+        private double sigmoid(double val, double center, double width)
+        {
+            return Math.Tanh(Math.E * -(val - center) / width);
+        }
+
         protected override double StrainValueOf(DifficultyHitObject current)
         {
             if (!(current.BaseObject is Hit))
@@ -89,12 +116,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
                 return 0.0;
             }
 
-            double objectStrain = 1;
 
+            // Console.Write(current.BaseObject.StartTime + ",");
             TaikoDifficultyHitObject hitObject = (TaikoDifficultyHitObject)current;
-            var durationHistory = noteIntervalManager.hit(hitObject);
-            double shortestRecentNote = durationHistory.Average();
-            objectStrain += speedBonus(shortestRecentNote);
+            double objectStrain = getNextSingleKeyStamina(hitObject).StrainValueAt(hitObject);
+            // Console.WriteLine(objectStrain);
+
+            // if (hitObject.StaminaCheese)
+            //     objectStrain *= cheesePenalty(hitObject.DeltaTime);
+
             return objectStrain;
         }
 
@@ -105,30 +135,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private double cheesePenalty(double notePairDuration)
         {
             if (notePairDuration > 125) return 1;
-            if (notePairDuration < 100) return 0.6;
+            if (notePairDuration < 100) return 0.8;
 
-            return 0.6 + (notePairDuration - 100) * 0.016;
-        }
-
-        // This is the same sigmoid function as the rhythm rework one, might want to find a way to unify them.
-        private double sigmoid(double val, double center, double width)
-        {
-            return Math.Tanh(Math.E * -(val - center) / width);
-        }
-
-
-        /// <summary>
-        /// Applies a speed bonus dependent on the time since the last hit performed using this hand.
-        /// </summary>
-        /// <param name="notePairDuration">The duration between the current and previous note hit using the same finger.</param>
-        private double speedBonus(double notePairDuration)
-        {
-            return Math.Min(1000 / notePairDuration, 4);
-            // if (notePairDuration >= 200) return 0;
-
-            // double bonus = 200 - notePairDuration;
-            // bonus *= bonus;
-            // return bonus / 100000;
+            return 0.8 + (notePairDuration - 100) * 0.008;
         }
     }
 }
