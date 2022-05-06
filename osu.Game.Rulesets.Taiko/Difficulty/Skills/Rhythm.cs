@@ -75,16 +75,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             objectStrain *= speedPenalty(hitObject.DeltaTime);
             objectStrain *= leniencyPenalty(hitObject);
 
-            // Needs to be done here since calls above read this value
-            if (Math.Abs(hitObject.Rhythm.Ratio - 1) < 0.04)
-            {
-                notesSinceRhythmChange = 0;
-            }
-
             currentStrain += objectStrain;
             return currentStrain;
         }
 
+        /// <summary>
+        /// Applies a penalty if they hit objects can be cheesed by being hit off-time.
+        /// </summary>
+        /// <remarks>
+        /// Takes the maximum leniency between past to current and current to next hitobjects
+        /// </remarks>
         private double leniencyPenalty(TaikoDifficultyHitObject hitObject)
         {
             double penalty = sigmoid(hitObject.Rhythm.Leniency, 0.5, 0.3) * 0.5 + 0.5;
@@ -94,35 +94,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         private double sigmoid(double val, double center, double width)
         {
             return Math.Tanh(Math.E * -(val - center) / width);
-        }
-
-        /// <summary>
-        /// Returns a penalty to apply to the current hit object caused by repeating rhythm changes.
-        /// </summary>
-        /// <remarks>
-        /// Repetitions of more recent patterns are associated with a higher penalty.
-        /// </remarks>
-        /// <param name="hitObject">The current hit object being considered.</param>
-        private double repetitionPenalties(TaikoDifficultyHitObject hitObject)
-        {
-            double penalty = 1;
-
-            rhythmHistory.Enqueue(hitObject);
-
-            for (int mostRecentPatternsToCompare = 2; mostRecentPatternsToCompare <= rhythm_history_max_length / 2; mostRecentPatternsToCompare++)
-            {
-                for (int start = rhythmHistory.Count - mostRecentPatternsToCompare - 1; start >= 0; start--)
-                {
-                    if (!samePattern(start, mostRecentPatternsToCompare))
-                        continue;
-
-                    int notesSince = hitObject.ObjectIndex - rhythmHistory[start].ObjectIndex;
-                    penalty *= repetitionPenalty(notesSince);
-                    break;
-                }
-            }
-
-            return penalty;
         }
 
         /// <summary>
@@ -145,18 +116,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// </summary>
         /// <param name="notesSince">Number of notes since the last repetition of a rhythm change.</param>
         private static double repetitionPenalty(int notesSince) => Math.Min(1.0, 0.06 * notesSince);
-
-        /// <summary>
-        /// Calculates a penalty based on the number of notes since the last rhythm change.
-        /// Both rare and frequent rhythm changes are penalised.
-        /// </summary>
-        /// <param name="patternLength">Number of notes since the last rhythm change.</param>
-        private double patternLengthPenalty(int patternLength)
-        {
-            double shortPatternPenalty = Math.Min(0.15 * patternLength, 1.0);
-            double longPatternPenalty = Math.Clamp(2.5 - 0.15 * patternLength, 0.0, 1.0);
-            return shortPatternPenalty;
-        }
 
         /// <summary>
         /// Calculates a penalty for objects that do not require alternating hands.
