@@ -153,17 +153,7 @@ namespace osu.Game.Beatmaps
                 }
             };
 
-            Task.Run(async () =>
-            {
-                try
-                {
-                    await cacheDownloadRequest.PerformAsync();
-                }
-                catch
-                {
-                    // Prevent throwing unobserved exceptions, as they will be logged from the network request to the log file anyway.
-                }
-            });
+            Task.Run(() => cacheDownloadRequest.PerformAsync());
         }
 
         private bool checkLocalCache(BeatmapSetInfo set, BeatmapInfo beatmapInfo)
