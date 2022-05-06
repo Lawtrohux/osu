@@ -18,7 +18,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
         private LimitedCapacityQueue<double> IntervalHistory = new LimitedCapacityQueue<double>(max_history_length);
         private double PreviousHitTime = -1;
-        private double CurrentStrain = 0;
+        // private double CurrentStrain = 0;
         private double StrainDecayBase = 0.2;
 
         private double StrainValueOf(DifficultyHitObject current)
@@ -30,7 +30,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             }
             else
             {
-                double objectStrain = 0.02;
+                double objectStrain = 0.3;
                 IntervalHistory.Enqueue(current.StartTime - PreviousHitTime);
                 PreviousHitTime = current.StartTime;
                 objectStrain += speedBonus(IntervalHistory.Min());
@@ -40,10 +40,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
         public double StrainValueAt(DifficultyHitObject current)
         {
-            CurrentStrain *= strainDecay(current.StartTime - PreviousHitTime);
-            CurrentStrain += StrainValueOf(current);
+            // CurrentStrain *= strainDecay(current.StartTime - PreviousHitTime);
+            // CurrentStrain += StrainValueOf(current);
 
-            return CurrentStrain;
+            return StrainValueOf(current);
         }
 
         private double strainDecay(double ms) => Math.Pow(StrainDecayBase, ms / 1000);
@@ -54,7 +54,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// <param name="notePairDuration">The duration between the current and previous note hit using the same key.</param>
         private double speedBonus(double notePairDuration)
         {
-            return 8000 / Math.Pow(notePairDuration + 20, 2.2);
+            return 175 / Math.Pow(notePairDuration + 100, 1);
         }
     }
 
@@ -66,8 +66,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </remarks>
     public class Stamina : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 1.8;
-        protected override double StrainDecayBase => 0.5;
+        protected override double SkillMultiplier => 1;
+        protected override double StrainDecayBase => 0.4;
 
         private SingleKeyStamina[] keyStamina = new SingleKeyStamina[4] {
             new SingleKeyStamina(),
@@ -120,7 +120,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             // Console.Write(current.BaseObject.StartTime + ",");
             TaikoDifficultyHitObject hitObject = (TaikoDifficultyHitObject)current;
             double objectStrain = getNextSingleKeyStamina(hitObject).StrainValueAt(hitObject);
-            objectStrain += 0.2; // Add a small amount of strain for every hit regardless of key
             // Console.WriteLine(objectStrain);
 
             // if (hitObject.StaminaCheese)

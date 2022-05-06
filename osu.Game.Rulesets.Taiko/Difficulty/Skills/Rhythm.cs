@@ -16,7 +16,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </summary>
     public class Rhythm : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 3;
+        protected override double SkillMultiplier => 3.1;
         protected override double StrainDecayBase => 0;
 
         /// <summary>
@@ -89,7 +89,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
         private double leniencyPenalty(TaikoDifficultyHitObject hitObject)
         {
-            double penalty = sigmoid(hitObject.Rhythm.Leniency, 0.5, 0.4) * 0.5 + 0.5;
+            double penalty = sigmoid(hitObject.Rhythm.Leniency, 0.5, 0.3) * 0.5 + 0.5;
             return penalty;
         }
 

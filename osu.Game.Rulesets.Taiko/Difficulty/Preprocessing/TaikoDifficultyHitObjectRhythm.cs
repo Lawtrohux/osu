@@ -35,7 +35,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         {
             Ratio = ratio;
             Difficulty = difficultyFromRatio(ratio);
-            this.Leniency = greatHitWindow / Math.Min(pastInterval, futureInterval);
+            this.Leniency = greatHitWindow / (Math.Min(pastInterval, futureInterval) * 0.9 + Math.Max(pastInterval, futureInterval) * 0.1);
             // Console.WriteLine(this.Leniency);
         }
 
@@ -111,9 +111,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
                 case 1:
                     return 0.14;
                 case 2:
-                    return 0.1;
+                    return 0.11;
                 case 3:
-                    return 0.18;
+                    return 0.16;
+                case 4:
+                    return 0.22; // Higher due to the fact that we don't use enough terms such that n/4 is penalized properly
                 default:
                     return 2 / Math.Pow(denominator, 2);
             }

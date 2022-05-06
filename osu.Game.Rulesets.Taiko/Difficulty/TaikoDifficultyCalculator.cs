@@ -20,9 +20,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
-        private const double rhythm_skill_multiplier = 0.016;
+        private const double rhythm_skill_multiplier = 0.014;
         private const double colour_skill_multiplier = 0.01;
-        private const double stamina_skill_multiplier = 0.016;
+        private const double stamina_skill_multiplier = 0.021;
 
         private double greatHitWindow = 0;
 
@@ -155,40 +155,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             }
 
             double difficulty = 0;
-            double weight = 1.6;
+            double weight = 2;
 
             foreach (double strain in peaks.OrderByDescending(d => d))
             {
-                difficulty += strain * weight;
-                weight *= 0.84;
+                difficulty += strain * (1 / weight);
+                weight += 1;
             }
 
+            difficulty = difficulty * 2;
             return difficulty;
-            // List<double> peaks = new List<double>();
-
-            // var colourPeaks = colour.GetCurrentStrainPeaks().ToList();
-            // var rhythmPeaks = rhythm.GetCurrentStrainPeaks().ToList();
-            // var staminaPeaks = stamina.GetCurrentStrainPeaks().ToList();
-
-            // for (int i = 0; i < colourPeaks.Count; i++)
-            // {
-            //     double colourPeak = colourPeaks[i] * colour_skill_multiplier;
-            //     double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
-            //     double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * staminaPenalty;
-            //     peaks.Add(norm(2, colourPeak, rhythmPeak, staminaPeak));
-            // }
-
-            // double difficulty = 0;
-            // double weight = 1;
-
-            // foreach (double strain in peaks.OrderByDescending(d => d))
-            // {
-            //     difficulty += strain * (1 / weight);
-            //     weight += 1;
-            // }
-
-            // difficulty = difficulty * 1.5;
-            // return difficulty;
         }
 
         /// <summary>
