@@ -58,7 +58,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
         protected override double StrainValueOf(DifficultyHitObject current)
         {
-            // drum rolls and swells are exempt.
+            // Drum rolls and Swells are exempt.
             if (!(current.BaseObject is Hit))
             {
                 resetRhythmAndStrain();
@@ -72,12 +72,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
             double objectStrain = hitObject.Rhythm.Difficulty;
 
-            // objectStrain *= repetitionPenalties(hitObject);
-            // objectStrain *= patternLengthPenalty(notesSinceRhythmChange);
             objectStrain *= speedPenalty(hitObject.DeltaTime);
             objectStrain *= leniencyPenalty(hitObject);
 
-            // careful - needs to be done here since calls above read this value
+            // Needs to be done here since calls above read this value
             if (Math.Abs(hitObject.Rhythm.Ratio - 1) < 0.04)
             {
                 notesSinceRhythmChange = 0;
@@ -155,11 +153,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         /// <param name="patternLength">Number of notes since the last rhythm change.</param>
         private double patternLengthPenalty(int patternLength)
         {
-            // double shortPatternPenalty = -sigmoid(patternLength, 2, 1.6) * 0.5 + 0.5;
             double shortPatternPenalty = Math.Min(0.15 * patternLength, 1.0);
             double longPatternPenalty = Math.Clamp(2.5 - 0.15 * patternLength, 0.0, 1.0);
             return shortPatternPenalty;
-            // return Math.Min(shortPatternPenalty, longPatternPenalty);
         }
 
         /// <summary>
@@ -173,11 +169,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             }
 
             return sigmoid(deltaTime, 160, 180) * 0.5 + 0.5;
-            // if (deltaTime < 80) return 1;
-            // if (deltaTime < 210) return Math.Max(0, 1.4 - 0.005 * deltaTime);
-
-            // resetRhythmAndStrain();
-            // return 0.0;
         }
 
         /// <summary>

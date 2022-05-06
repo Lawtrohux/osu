@@ -57,17 +57,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         protected override IEnumerable<DifficultyHitObject> CreateDifficultyHitObjects(IBeatmap beatmap, double clockRate)
         {
             List<TaikoDifficultyHitObject> taikoDifficultyHitObjects = new List<TaikoDifficultyHitObject>();
-            // StreamWriter rcd = new StreamWriter($"/run/mount/secondary/workspace/osu/output/ratio-export/ratio-{beatmap.BeatmapInfo.Metadata.Title}.csv", append: false);
 
             for (int i = 2; i < beatmap.HitObjects.Count - 1; i++)
             {
                 TaikoDifficultyHitObject hitObject = new TaikoDifficultyHitObject(
                     beatmap.HitObjects[i], beatmap.HitObjects[i - 1], beatmap.HitObjects[i - 2], beatmap.HitObjects[i + 1], this.greatHitWindow, clockRate, i);
                 taikoDifficultyHitObjects.Add(hitObject);
-                // rcd.WriteLine($"{hitObject.Rhythm.Ratio},{hitObject.Rhythm.Difficulty}");
             }
 
-            new StaminaCheeseDetector(taikoDifficultyHitObjects).FindCheese();
             return taikoDifficultyHitObjects;
         }
 
@@ -85,7 +82,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
 
             double staminaPenalty = simpleColourPenalty(staminaRating, colourRating);
-            // staminaRating *= staminaPenalty;
 
             double combinedRating = locallyCombinedDifficulty(colour, rhythm, stamina, staminaPenalty);
             double separatedRating = norm(1.5, colourRating, rhythmRating, staminaRating);
@@ -144,7 +140,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             {
                 double colourPeak = colourPeaks[i] * colour_skill_multiplier;
                 double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
-                double staminaPeak = (staminaRightPeaks[i] + staminaLeftPeaks[i]) * stamina_skill_multiplier * staminaPenalty;
+                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * staminaPenalty;
 
                 double peak = norm(2, colourPeak, rhythmPeak, staminaPeak);
 

@@ -36,7 +36,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             Ratio = ratio;
             Difficulty = difficultyFromRatio(ratio);
             this.Leniency = greatHitWindow / (Math.Min(pastInterval, futureInterval) * 0.9 + Math.Max(pastInterval, futureInterval) * 0.1);
-            // Console.WriteLine(this.Leniency);
         }
 
         /// <summary>

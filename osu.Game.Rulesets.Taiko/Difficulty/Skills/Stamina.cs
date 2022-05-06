@@ -16,37 +16,35 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     {
         private const int max_history_length = 2;
 
-        private LimitedCapacityQueue<double> IntervalHistory = new LimitedCapacityQueue<double>(max_history_length);
-        private double PreviousHitTime = -1;
-        // private double CurrentStrain = 0;
-        private double StrainDecayBase = 0.2;
+        private LimitedCapacityQueue<double> intervalHistory = new LimitedCapacityQueue<double>(max_history_length);
 
-        private double StrainValueOf(DifficultyHitObject current)
+        private double previousHitTime = -1;
+
+        private double strainDecayBase = 0.2;
+
+        private double strainValueOf(DifficultyHitObject current)
         {
-            if (PreviousHitTime == -1)
+            if (previousHitTime == -1)
             {
-                PreviousHitTime = current.StartTime;
+                previousHitTime = current.StartTime;
                 return 0;
             }
             else
             {
                 double objectStrain = 0.3;
-                IntervalHistory.Enqueue(current.StartTime - PreviousHitTime);
-                PreviousHitTime = current.StartTime;
-                objectStrain += speedBonus(IntervalHistory.Min());
+                intervalHistory.Enqueue(current.StartTime - previousHitTime);
+                previousHitTime = current.StartTime;
+                objectStrain += speedBonus(intervalHistory.Min());
                 return objectStrain;
             }
         }
 
         public double StrainValueAt(DifficultyHitObject current)
         {
-            // CurrentStrain *= strainDecay(current.StartTime - PreviousHitTime);
-            // CurrentStrain += StrainValueOf(current);
-
-            return StrainValueOf(current);
+            return strainValueOf(current);
         }
 
-        private double strainDecay(double ms) => Math.Pow(StrainDecayBase, ms / 1000);
+        private double strainDecay(double ms) => Math.Pow(strainDecayBase, ms / 1000);
 
         /// <summary>
         /// Applies a speed bonus dependent on the time since the last hit performed using this key.
@@ -69,12 +67,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         protected override double SkillMultiplier => 1;
         protected override double StrainDecayBase => 0.4;
 
-        private SingleKeyStamina[] keyStamina = new SingleKeyStamina[4] {
+        private SingleKeyStamina[] keyStamina = new SingleKeyStamina[4]
+        {
             new SingleKeyStamina(),
             new SingleKeyStamina(),
             new SingleKeyStamina(),
             new SingleKeyStamina()
         };
+
         private int donIndex = 1;
         private int katIndex = 3;
 
@@ -92,18 +92,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             if (current.HitType == HitType.Centre)
             {
                 donIndex = donIndex == 0 ? 1 : 0;
-                // Console.Write(donIndex + ",");
                 return keyStamina[donIndex];
             }
             else
             {
                 katIndex = katIndex == 2 ? 3 : 2;
-                // Console.Write(katIndex + ",");
                 return keyStamina[katIndex];
             }
         }
 
-        // This is the same sigmoid as the one in Rhythm, might want to unify these
         private double sigmoid(double val, double center, double width)
         {
             return Math.Tanh(Math.E * -(val - center) / width);
@@ -116,28 +113,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
                 return 0.0;
             }
 
-
-            // Console.Write(current.BaseObject.StartTime + ",");
             TaikoDifficultyHitObject hitObject = (TaikoDifficultyHitObject)current;
             double objectStrain = getNextSingleKeyStamina(hitObject).StrainValueAt(hitObject);
-            // Console.WriteLine(objectStrain);
-
-            // if (hitObject.StaminaCheese)
-            //     objectStrain *= cheesePenalty(hitObject.DeltaTime);
 
             return objectStrain;
         }
-
-        /// <summary>
-        /// Applies a penalty for hit objects marked with <see cref="TaikoDifficultyHitObject.StaminaCheese"/>.
-        /// </summary>
-        /// <param name="notePairDuration">The duration between the current and previous note hit using the same finger.</param>
-        private double cheesePenalty(double notePairDuration)
-        {
-            if (notePairDuration > 125) return 1;
-            if (notePairDuration < 100) return 0.8;
-
-            return 0.8 + (notePairDuration - 100) * 0.008;
-        }
     }
 }
+
