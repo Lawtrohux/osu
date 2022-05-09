@@ -14,7 +14,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 {
     class SingleKeyStamina
     {
-        private const int max_history_length = 2;
+        private const int max_history_length = 1;
 
         private LimitedCapacityQueue<double> intervalHistory = new LimitedCapacityQueue<double>(max_history_length);
 
@@ -31,7 +31,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             }
             else
             {
-                double objectStrain = 0.3;
+                double objectStrain = 0.5;
                 intervalHistory.Enqueue(current.StartTime - previousHitTime);
                 previousHitTime = current.StartTime;
                 objectStrain += speedBonus(intervalHistory.Min());
