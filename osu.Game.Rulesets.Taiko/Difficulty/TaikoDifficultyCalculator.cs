@@ -57,7 +57,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 );
             }
 
-            new StaminaCheeseDetector(taikoDifficultyHitObjects).FindCheese();
             return taikoDifficultyHitObjects;
         }
 
@@ -75,7 +74,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
 
             double staminaPenalty = simpleColourPenalty(staminaRating, colourRating);
-            // staminaRating *= staminaPenalty;
+            staminaRating *= staminaPenalty;
 
             double combinedRating = locallyCombinedDifficulty(colour, rhythm, stamina, staminaPenalty);
             double separatedRating = norm(1.5, colourRating, rhythmRating, staminaRating);
