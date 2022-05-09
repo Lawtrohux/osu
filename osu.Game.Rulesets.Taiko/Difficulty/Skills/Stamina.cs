@@ -14,13 +14,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 {
     class SingleKeyStamina
     {
-        private const int max_history_length = 1;
-
-        private LimitedCapacityQueue<double> intervalHistory = new LimitedCapacityQueue<double>(max_history_length);
-
         private double previousHitTime = -1;
-
-        private double strainDecayBase = 0.2;
 
         private double strainValueOf(DifficultyHitObject current)
         {
@@ -32,9 +26,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             else
             {
                 double objectStrain = 0.5;
-                intervalHistory.Enqueue(current.StartTime - previousHitTime);
+                objectStrain += speedBonus(current.StartTime - previousHitTime);
                 previousHitTime = current.StartTime;
-                objectStrain += speedBonus(intervalHistory.Min());
                 return objectStrain;
             }
         }
@@ -43,8 +36,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         {
             return strainValueOf(current);
         }
-
-        private double strainDecay(double ms) => Math.Pow(strainDecayBase, ms / 1000);
 
         /// <summary>
         /// Applies a speed bonus dependent on the time since the last hit performed using this key.
