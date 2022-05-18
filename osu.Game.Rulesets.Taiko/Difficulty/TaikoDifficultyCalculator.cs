@@ -96,6 +96,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 StaminaDifficulty = staminaRating,
                 RhythmDifficulty = rhythmRating,
                 ColourDifficulty = colourRating,
+                CombinedDifficulty = combinedRating,
                 GreatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate,
                 MaxCombo = beatmap.HitObjects.Count(h => h is Hit),
             };
@@ -162,6 +163,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             return difficulty;
         }
+
 
         /// <summary>
         /// Applies a final re-scaling of the star rating to bring maps with recorded full combos below 9.5 stars.

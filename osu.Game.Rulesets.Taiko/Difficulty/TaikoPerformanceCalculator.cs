@@ -7,7 +7,6 @@ using System.Linq;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
-using osu.Game.Rulesets.Taiko.Objects;
 using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty
@@ -39,40 +38,68 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 multiplier *= 0.90;
 
             if (score.Mods.Any(m => m is ModHidden))
-                multiplier *= 1.10;
+                multiplier *= 1;
 
-            double difficultyValue = computeDifficultyValue(score, taikoAttributes);
+            double totalDifficultyValue = computeTotalDifficultyValue(score, taikoAttributes);
+
+            double staminaValue = computeStaminaValue(score, taikoAttributes);
+            double rhythmValue = computeRhythmValue(score, taikoAttributes);
+            double colourValue = computeColourValue(score, taikoAttributes);
+
             double accuracyValue = computeAccuracyValue(score, taikoAttributes);
             double totalValue =
                 Math.Pow(
-                    Math.Pow(difficultyValue, 1.1) +
+                    Math.Pow(totalDifficultyValue, 1.1) +
                     Math.Pow(accuracyValue, 1.1), 1.0 / 1.1
                 ) * multiplier;
 
             return new TaikoPerformanceAttributes
             {
-                Difficulty = difficultyValue,
+                TotalDifficulty = totalDifficultyValue,
+                Stamina = staminaValue,
+                Rhythm = rhythmValue,
+                Colour = colourValue,
                 Accuracy = accuracyValue,
                 Total = totalValue
             };
         }
 
-        private double computeDifficultyValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
+        private double computeTotalDifficultyValue(ScoreInfo score, TaikoDifficultyAttributes taikoAttributes)
         {
-            double difficultyValue = Math.Pow(5 * Math.Max(1.0, attributes.StarRating / 0.175) - 4.0, 2.25) / 450.0;
+            double norm(double p, params double[] values) => Math.Pow(values.Sum(x => Math.Pow(x, p)), 1 / p);
+            double computedRating = norm(1.5, computeStaminaValue(score, taikoAttributes), computeRhythmValue(score, taikoAttributes), computeColourValue(score, taikoAttributes));
+            double starRating = 1.4 * computedRating + 0.5 * taikoAttributes.CombinedDifficulty;
+
+            double totalDifficultyValue = Math.Pow(5 * Math.Max(1.0, starRating / 0.175) - 4.0, 2.25) / 450.0;
 
             double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
-            difficultyValue *= lengthBonus;
+            totalDifficultyValue *= lengthBonus;
 
-            difficultyValue *= Math.Pow(0.985, countMiss);
+            totalDifficultyValue *= Math.Pow(0.985, countMiss);
+
+            return totalDifficultyValue * score.Accuracy;
+        }
+
+        private double computeStaminaValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
+        {
+            double staminaValue = attributes.StaminaDifficulty;
 
             if (score.Mods.Any(m => m is ModHidden))
-                difficultyValue *= 1.025;
+                staminaValue *= 1000;
 
-            if (score.Mods.Any(m => m is ModFlashlight<TaikoHitObject>))
-                difficultyValue *= 1.05 * lengthBonus;
+            return staminaValue;
+        }
 
-            return difficultyValue * score.Accuracy;
+        private double computeRhythmValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
+        {
+            double rhythmValue = attributes.RhythmDifficulty;
+            return rhythmValue;
+        }
+
+        private double computeColourValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
+        {
+            double colourValue = attributes.ColourDifficulty;
+            return colourValue;
         }
 
         private double computeAccuracyValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
