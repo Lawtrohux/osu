@@ -83,10 +83,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private double computeStaminaValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
         {
             double staminaValue = attributes.StaminaDifficulty;
-
-            if (score.Mods.Any(m => m is ModHidden))
-                staminaValue *= 1000;
-
             return staminaValue;
         }
 
