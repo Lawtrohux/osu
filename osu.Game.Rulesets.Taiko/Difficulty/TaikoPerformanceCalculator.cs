@@ -69,6 +69,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double norm(double p, params double[] values) => Math.Pow(values.Sum(x => Math.Pow(x, p)), 1 / p);
             double computedRating = norm(1.5, computeStaminaValue(score, taikoAttributes), computeRhythmValue(score, taikoAttributes), computeColourValue(score, taikoAttributes));
             double starRating = 1.4 * computedRating + 0.5 * taikoAttributes.CombinedDifficulty;
+            starRating = rescale(starRating);
 
             double totalDifficultyValue = Math.Pow(5 * Math.Max(1.0, starRating / 0.175) - 4.0, 2.25) / 450.0;
 
@@ -107,6 +108,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             // Bonus for many objects - it's harder to keep good accuracy up for longer
             return accValue * Math.Min(1.15, Math.Pow(totalHits / 1500.0, 0.3));
+        }
+
+        private double rescale(double sr)
+        {
+            if (sr < 0) return sr;
+
+            return 10.43 * Math.Log(sr / 8 + 1);
         }
 
         private int totalHits => countGreat + countOk + countMeh + countMiss;
