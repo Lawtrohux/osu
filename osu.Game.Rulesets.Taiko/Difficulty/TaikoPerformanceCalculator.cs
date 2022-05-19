@@ -38,8 +38,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 multiplier *= 0.90;
 
             if (score.Mods.Any(m => m is ModHidden))
-                multiplier *= 1;
+                multiplier *= 1.10;
 
+            double totalPerformanceValue = computeTotalPerformanceValue(score, taikoAttributes);
             double totalDifficultyValue = computeTotalDifficultyValue(score, taikoAttributes);
 
             double staminaValue = computeStaminaValue(score, taikoAttributes);
@@ -49,13 +50,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double accuracyValue = computeAccuracyValue(score, taikoAttributes);
             double totalValue =
                 Math.Pow(
-                    Math.Pow(totalDifficultyValue, 1.1) +
+                    Math.Pow(totalPerformanceValue, 1.1) +
                     Math.Pow(accuracyValue, 1.1), 1.0 / 1.1
                 ) * multiplier;
 
             return new TaikoPerformanceAttributes
             {
-                TotalDifficulty = totalDifficultyValue,
+                totalPerformance = totalPerformanceValue,
+                totalDifficulty = totalDifficultyValue,
                 Stamina = staminaValue,
                 Rhythm = rhythmValue,
                 Colour = colourValue,
@@ -68,17 +70,21 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             double norm(double p, params double[] values) => Math.Pow(values.Sum(x => Math.Pow(x, p)), 1 / p);
             double computedRating = norm(1.5, computeStaminaValue(score, taikoAttributes), computeRhythmValue(score, taikoAttributes), computeColourValue(score, taikoAttributes));
-            double starRating = 1.4 * computedRating + 0.5 * taikoAttributes.CombinedDifficulty;
-            starRating = rescale(starRating);
+            double difficultyValue = 1.4 * computedRating + 0.5 * taikoAttributes.CombinedDifficulty;
+            difficultyValue = TaikoDifficultyCalculator.Rescale(difficultyValue);
+            return difficultyValue;
+        }
 
-            double totalDifficultyValue = Math.Pow(5 * Math.Max(1.0, starRating / 0.175) - 4.0, 2.25) / 450.0;
+        private double computeTotalPerformanceValue(ScoreInfo score, TaikoDifficultyAttributes taikoAttributes)
+        {
+            double totalPerformance = Math.Pow(5 * Math.Max(1.0, computeTotalDifficultyValue(score, taikoAttributes) / 0.175) - 4.0, 2.25) / 450.0;
 
             double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
-            totalDifficultyValue *= lengthBonus;
+            totalPerformance *= lengthBonus;
 
-            totalDifficultyValue *= Math.Pow(0.985, countMiss);
+            totalPerformance *= Math.Pow(0.985, countMiss);
 
-            return totalDifficultyValue * score.Accuracy;
+            return totalPerformance * score.Accuracy;
         }
 
         private double computeStaminaValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
@@ -108,13 +114,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             // Bonus for many objects - it's harder to keep good accuracy up for longer
             return accValue * Math.Min(1.15, Math.Pow(totalHits / 1500.0, 0.3));
-        }
-
-        private double rescale(double sr)
-        {
-            if (sr < 0) return sr;
-
-            return 10.43 * Math.Log(sr / 8 + 1);
         }
 
         private int totalHits => countGreat + countOk + countMeh + countMiss;

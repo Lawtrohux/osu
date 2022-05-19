@@ -9,8 +9,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoPerformanceAttributes : PerformanceAttributes
     {
-        [JsonProperty("total_difficulty")]
-        public double TotalDifficulty { get; set; }
+        [JsonProperty("total_performance")]
+        public double totalPerformance { get; set; }
+
+        [JsonProperty("RawDifficulty")]
+        public double totalDifficulty { get; set; }
 
         [JsonProperty("accuracy")]
         public double Accuracy { get; set; }
@@ -29,7 +32,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             foreach (var attribute in base.GetAttributesForDisplay())
                 yield return attribute;
 
-            yield return new PerformanceDisplayAttribute(nameof(TotalDifficulty), "TotalDifficulty", TotalDifficulty);
+            yield return new PerformanceDisplayAttribute(nameof(totalPerformance), "totalPerformance", totalPerformance);
+            yield return new PerformanceDisplayAttribute(nameof(totalDifficulty), "totalDifficulty", totalDifficulty);
             yield return new PerformanceDisplayAttribute(nameof(Stamina), "Stamina", Stamina);
             yield return new PerformanceDisplayAttribute(nameof(Rhythm), "Rhythm", Rhythm);
             yield return new PerformanceDisplayAttribute(nameof(Colour), "Colour", Colour);

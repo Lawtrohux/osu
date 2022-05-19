@@ -84,7 +84,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double combinedRating = locallyCombinedDifficulty(colour, rhythm, stamina, staminaPenalty);
             double separatedRating = norm(1.5, colourRating, rhythmRating, staminaRating);
             double starRating = 1.4 * separatedRating + 0.5 * combinedRating;
-            starRating = rescale(starRating);
+            starRating = Rescale(starRating);
 
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
@@ -169,7 +169,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// Applies a final re-scaling of the star rating to bring maps with recorded full combos below 9.5 stars.
         /// </summary>
         /// <param name="sr">The raw star rating value before re-scaling.</param>
-        private double rescale(double sr)
+        public static double Rescale(double sr)
         {
             if (sr < 0) return sr;
 
