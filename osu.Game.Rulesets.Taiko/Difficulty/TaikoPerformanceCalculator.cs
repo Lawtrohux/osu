@@ -56,8 +56,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             return new TaikoPerformanceAttributes
             {
-                totalPerformance = totalPerformanceValue,
-                totalDifficulty = totalDifficultyValue,
+                TotalPerformance = totalPerformanceValue,
+                TotalDifficulty = totalDifficultyValue,
                 Stamina = staminaValue,
                 Rhythm = rhythmValue,
                 Colour = colourValue,
@@ -68,9 +68,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private double computeTotalDifficultyValue(ScoreInfo score, TaikoDifficultyAttributes taikoAttributes)
         {
-            double norm(double p, params double[] values) => Math.Pow(values.Sum(x => Math.Pow(x, p)), 1 / p);
-            double computedRating = norm(1.5, computeStaminaValue(score, taikoAttributes), computeRhythmValue(score, taikoAttributes), computeColourValue(score, taikoAttributes));
-            double difficultyValue = 1.4 * computedRating + 0.5 * taikoAttributes.CombinedDifficulty;
+            double computedRating = 1.4 * TaikoDifficultyCalculator.Norm(1.5, computeStaminaValue(score, taikoAttributes), computeRhythmValue(score, taikoAttributes), computeColourValue(score, taikoAttributes));
+            double difficultyValue = computedRating + taikoAttributes.StrainDifficulty;
             difficultyValue = TaikoDifficultyCalculator.Rescale(difficultyValue);
             return difficultyValue;
         }

@@ -30,7 +30,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// <summary>
         /// The combined difficulty of unpenalised skills
         /// </summary>
-        public double CombinedDifficulty { get; set; }
+        public double StrainDifficulty { get; set; }
 
         /// <summary>
         /// The perceived approach rate inclusive of rate-adjusting mods (DT/HT/etc).
