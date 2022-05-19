@@ -12,20 +12,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         [JsonProperty("total_performance")]
         public double TotalPerformance { get; set; }
 
-        [JsonProperty("RawDifficulty")]
-        public double TotalDifficulty { get; set; }
+        [JsonProperty("stamina_performance")]
+        public double StaminaPerformance { get; set; }
+
+        [JsonProperty("rhythm_performance")]
+        public double RhythmPerformance { get; set; }
+
+        [JsonProperty("colour_performance")]
+        public double ColourPerformance { get; set; }
 
         [JsonProperty("accuracy")]
         public double Accuracy { get; set; }
-
-        [JsonProperty("stamina")]
-        public double Stamina { get; set; }
-
-        [JsonProperty("rhythm")]
-        public double Rhythm { get; set; }
-
-        [JsonProperty("colour")]
-        public double Colour { get; set; }
 
         public override IEnumerable<PerformanceDisplayAttribute> GetAttributesForDisplay()
         {
@@ -33,10 +30,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 yield return attribute;
 
             yield return new PerformanceDisplayAttribute(nameof(TotalPerformance), "totalPerformance", TotalPerformance);
-            yield return new PerformanceDisplayAttribute(nameof(TotalDifficulty), "totalDifficulty", TotalDifficulty);
-            yield return new PerformanceDisplayAttribute(nameof(Stamina), "Stamina", Stamina);
-            yield return new PerformanceDisplayAttribute(nameof(Rhythm), "Rhythm", Rhythm);
-            yield return new PerformanceDisplayAttribute(nameof(Colour), "Colour", Colour);
+            yield return new PerformanceDisplayAttribute(nameof(StaminaPerformance), "StaminaPerformance", StaminaPerformance);
+            yield return new PerformanceDisplayAttribute(nameof(RhythmPerformance), "RhythmPerformance", RhythmPerformance);
+            yield return new PerformanceDisplayAttribute(nameof(ColourPerformance), "ColourPerformance", ColourPerformance);
 
             yield return new PerformanceDisplayAttribute(nameof(Accuracy), "Accuracy", Accuracy);
         }

@@ -7,6 +7,7 @@ using System.Linq;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
+using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 using osu.Game.Scoring;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty
@@ -33,7 +34,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             countMiss = score.Statistics.GetValueOrDefault(HitResult.Miss);
 
             double totalPerformanceValue = computeTotalPerformanceValue(score, taikoAttributes);
-            double totalDifficultyValue = computeTotalDifficultyValue(score, taikoAttributes);
 
             double staminaValue = computeStaminaValue(score, taikoAttributes);
             double rhythmValue = computeRhythmValue(score, taikoAttributes);
@@ -49,10 +49,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             return new TaikoPerformanceAttributes
             {
                 TotalPerformance = totalPerformanceValue,
-                TotalDifficulty = totalDifficultyValue,
-                Stamina = staminaValue,
-                Rhythm = rhythmValue,
-                Colour = colourValue,
+                StaminaPerformance = staminaValue,
+                RhythmPerformance = rhythmValue,
+                ColourPerformance = colourValue,
                 Accuracy = accuracyValue,
                 Total = totalValue
             };
@@ -70,9 +69,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             double totalPerformance = Math.Pow(5 * Math.Max(1.0, computeTotalDifficultyValue(score, taikoAttributes) / 0.175) - 4.0, 2.25) / 450.0;
 
-            double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
-            totalPerformance *= lengthBonus;
-
             totalPerformance *= Math.Pow(0.985, countMiss);
 
             return totalPerformance * score.Accuracy;
@@ -81,6 +77,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private double computeStaminaValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
         {
             double staminaValue = attributes.StaminaDifficulty;
+
+            // Applies a length bonus to stamina - longer maps are harder
+            double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
+            staminaValue *= lengthBonus;
+
             return staminaValue;
         }
 
