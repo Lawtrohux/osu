@@ -158,6 +158,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             return difficulty;
         }
 
+        // These Variables are shared with Difficulty and Performance calculator.
+
         /// <summary>
         /// Returns the <i>p</i>-norm of an <i>n</i>-dimensional vector.
         /// </summary>
