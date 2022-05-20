@@ -88,6 +88,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private double computeRhythmValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
         {
             double rhythmValue = attributes.RhythmDifficulty;
+
+            double rhythmBonus = rhythmValue * Math.Min(1, Math.Pow(150.0 / attributes.GreatHitWindow, 1.1));
+            rhythmValue *= rhythmBonus;
+
             return rhythmValue;
         }
 
