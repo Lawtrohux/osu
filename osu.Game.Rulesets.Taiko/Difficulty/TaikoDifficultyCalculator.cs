@@ -20,9 +20,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
-        private const double rhythm_skill_multiplier = 0.014;
-        private const double colour_skill_multiplier = 0.01;
-        private const double stamina_skill_multiplier = 0.021;
+        private const double rhythm_skill_multiplier = 0.016;
+        private const double colour_skill_multiplier = 0.012;
+        private const double stamina_skill_multiplier = 0.022;
 
         public TaikoDifficultyCalculator(IRulesetInfo ruleset, IWorkingBeatmap beatmap)
             : base(ruleset, beatmap)
@@ -82,9 +82,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 staminaPenalty *= 0.25;
             }
 
-            double combinedRating = locallyCombinedDifficulty(colour, rhythm, stamina, staminaPenalty);
-            double separatedRating = norm(1.5, colourRating, rhythmRating, staminaRating);
-            double starRating = 1.4 * separatedRating + 0.5 * combinedRating;
+            double strainRating = 0.5 * peakStrain(colour, rhythm, stamina, staminaPenalty);
+            double difficultyRating = 1.4 * norm(colourRating, rhythmRating, staminaRating);
+
+            double starRating = difficultyRating + strainRating;
             starRating = rescale(starRating);
 
             HitWindows hitWindows = new TaikoHitWindows();
@@ -119,9 +120,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// <summary>
         /// Returns the <i>p</i>-norm of an <i>n</i>-dimensional vector.
         /// </summary>
-        /// <param name="p">The value of <i>p</i> to calculate the norm for.</param>
         /// <param name="values">The coefficients of the vector.</param>
-        private double norm(double p, params double[] values) => Math.Pow(values.Sum(x => Math.Pow(x, p)), 1 / p);
+        private double norm(params double[] values) => Math.Pow(values.Sum(x => Math.Pow(x, 2)), 0.5);
 
         /// <summary>
         /// Returns the partial star rating of the beatmap, calculated using peak strains from all sections of the map.
@@ -130,7 +130,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// For each section, the peak strains of all separate skills are combined into a single peak strain for the section.
         /// The resulting partial rating of the beatmap is a weighted sum of the combined peaks (higher peaks are weighted more).
         /// </remarks>
-        private double locallyCombinedDifficulty(Colour colour, Rhythm rhythm, Stamina stamina, double staminaPenalty)
+        private double peakStrain(Colour colour, Rhythm rhythm, Stamina stamina, double staminaPenalty)
         {
             List<double> peaks = new List<double>();
 
@@ -144,7 +144,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
                 double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * staminaPenalty;
 
-                double peak = norm(2, colourPeak, rhythmPeak, staminaPeak);
+                double peak = norm(colourPeak, rhythmPeak, staminaPeak);
 
                 // Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort (e.g. /b/2351871).
                 // These sections will not contribute to the difficulty.

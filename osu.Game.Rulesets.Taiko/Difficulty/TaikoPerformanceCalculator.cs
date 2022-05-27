@@ -35,9 +35,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             double multiplier = 1.1; // This is being adjusted to keep the final pp value scaled around what it used to be when changing things
 
-            if (score.Mods.Any(m => m is ModNoFail))
-                multiplier *= 0.90;
-
             if (score.Mods.Any(m => m is ModHidden))
                 multiplier *= 1.10;
 
