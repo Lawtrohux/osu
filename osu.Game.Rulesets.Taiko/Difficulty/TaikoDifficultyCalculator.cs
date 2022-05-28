@@ -15,7 +15,6 @@ using osu.Game.Rulesets.Taiko.Difficulty.Skills;
 using osu.Game.Rulesets.Taiko.Mods;
 using osu.Game.Rulesets.Taiko.Objects;
 using osu.Game.Rulesets.Taiko.Scoring;
-
 namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoDifficultyCalculator : DifficultyCalculator
@@ -42,6 +41,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             new TaikoModHalfTime(),
             new TaikoModEasy(),
             new TaikoModHardRock(),
+            new TaikoModHidden(),
         };
 
         protected override IEnumerable<DifficultyHitObject> CreateDifficultyHitObjects(IBeatmap beatmap, double clockRate)
@@ -77,7 +77,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             staminaRating *= staminaPenalty;
 
             //TODO : This is a temporary fix for the stamina rating of converts, due to their low colour variance.
-            if (beatmap.BeatmapInfo.Ruleset.OnlineID == 0 && colourRating < 0.05)
+            if (beatmap.BeatmapInfo.Ruleset.OnlineID == 0 && (rhythmRating < 1.5) | (colourRating < 0.05))
             {
                 staminaPenalty *= 0.25;
             }
@@ -85,7 +85,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double strainRating = 0.5 * peakStrain(colour, rhythm, stamina, staminaPenalty);
             double difficultyRating = 1.4 * norm(colourRating, rhythmRating, staminaRating);
 
-            double starRating = difficultyRating + strainRating;
+            double starRating = strainRating + difficultyRating;
             starRating = rescale(starRating);
 
             HitWindows hitWindows = new TaikoHitWindows();
