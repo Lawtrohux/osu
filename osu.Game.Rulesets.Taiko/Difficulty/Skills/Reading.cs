@@ -12,9 +12,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     public class Reading : StrainDecaySkill
     {
         protected override double SkillMultiplier => 1;
-        protected override double StrainDecayBase => 0.4;
+        protected override double StrainDecayBase => 0.1;
+
         private const double highSvMultiplier = 1;
-        private const double lowSvMultiplier = 1;
+        private const double lowSvMultiplier = 1.2;
 
         public Reading(Mod[] mods)
             : base(mods)
@@ -24,7 +25,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         protected override double StrainValueOf(DifficultyHitObject current)
         {
             TaikoDifficultyHitObject taikoDifficultyHitObject = (TaikoDifficultyHitObject)current;
-            return svBonus(taikoDifficultyHitObject);
+
+            double objectStrain = svBonus(taikoDifficultyHitObject);
+
+            objectStrain *= highSvMultiplier * lowSvMultiplier;
+
+            return objectStrain;
         }
 
         private double svBonus(TaikoDifficultyHitObject current)
@@ -45,12 +51,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             const double lowSvWidth = 160;
 
             // Calculate low sv center, considering density
-            double lowSvCenter = lowSvCenterUpperBound - (lowSvCenterUpperBound - lowSvCenterLowerBound) * this.sigmoid(current.DeltaTime, lowSvDeltaTimeCenter, lowSvDeltaTimeWidth);
+            double lowSvCenter = lowSvCenterUpperBound - (lowSvCenterUpperBound - lowSvCenterLowerBound) * sigmoid(current.DeltaTime, lowSvDeltaTimeCenter, lowSvDeltaTimeWidth);
 
             double highSvBonus = sigmoid(current.EffectiveBPM, highSvCenter, highSvWidth);
             double lowSvBonus = 1 - sigmoid(current.EffectiveBPM, lowSvCenter, lowSvWidth);
 
-            return highSvMultiplier * highSvBonus + lowSvMultiplier * lowSvBonus;
+            return highSvBonus + lowSvBonus;
         }
 
         private double sigmoid(double value, double center, double width)

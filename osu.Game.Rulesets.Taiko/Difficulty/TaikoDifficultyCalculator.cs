@@ -21,9 +21,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
         private const double rhythm_skill_multiplier = 0.016;
-        private const double colour_skill_multiplier = 0.012;
+        private const double colour_skill_multiplier = 0.010;
         private const double stamina_skill_multiplier = 0.022;
-        private const double reading_skill_multiplier = 0.010;
+        private const double reading_skill_multiplier = 0.014;
 
         public TaikoDifficultyCalculator(IRulesetInfo ruleset, IWorkingBeatmap beatmap)
             : base(ruleset, beatmap)
@@ -77,6 +77,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double rhythmRating = rhythm.DifficultyValue() * rhythm_skill_multiplier;
             double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
             double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
+
+            if (staminaRating > 4.4 && colourRating < 0.6 || colourRating > 0.69)
+            {
+                staminaRating *= 1.15;
+                colourRating *= 1.5;
+                rhythmRating *= 1.5;
+            }
 
             double staminaPenalty = simpleColourPenalty(staminaRating, colourRating);
             double readingPenalty = readingSkillPenalty(readingRating, colourRating);
