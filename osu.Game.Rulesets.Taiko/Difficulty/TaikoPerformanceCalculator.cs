@@ -59,7 +59,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private double computeDifficultyValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
         {
-            double difficultyValue = Math.Pow(5 * Math.Max(1.0, attributes.StarRating / 0.175) - 4.0, 2.25) / 450.0;
+            double difficultyValue = Math.Pow(5 * Math.Max(1.0, attributes.StarRating / 0.190) - 4.0, 2.25) / 450.0;
 
             double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
             difficultyValue *= lengthBonus;
@@ -80,7 +80,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (attributes.GreatHitWindow <= 0)
                 return 0;
 
-            double accValue = Math.Pow(150.0 / attributes.GreatHitWindow, 1.1) * Math.Pow(score.Accuracy, 15) * 22.0;
+            double accValue = Math.Pow(150.0 / attributes.GreatHitWindow, 1.1) * Math.Pow(score.Accuracy, 15) * 40.0;
 
             // Bonus for many objects - it's harder to keep good accuracy up for longer
             return accValue * Math.Min(1.15, Math.Pow(totalHits / 1500.0, 0.3));
