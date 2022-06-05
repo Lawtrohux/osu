@@ -28,6 +28,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         public double ColourDifficulty { get; set; }
 
         /// <summary>
+        /// The difficulty corresponding to the reading skill.
+        /// </summary>
+        [JsonProperty("reading_difficulty")]
+        public double ReadingDifficulty { get; set; }
+
+        /// <summary>
         /// The perceived approach rate inclusive of rate-adjusting mods (DT/HT/etc).
         /// </summary>
         /// <remarks>
