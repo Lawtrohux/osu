@@ -18,7 +18,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     public class Stamina : StrainDecaySkill
     {
         protected override double SkillMultiplier => 1;
-        protected override double StrainDecayBase => 0.4;
+        protected override double StrainDecayBase => 0.40;
 
         private readonly SingleKeyStamina[] centreKeyStamina =
         {

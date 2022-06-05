@@ -78,7 +78,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
             double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
 
-            if (staminaRating > 4.4 && colourRating < 0.6 || colourRating > 0.69)
+            if (staminaRating >= 5.5 && colourRating <= 0.6 || colourRating >= 0.69)
             {
                 staminaRating *= 1.15;
                 colourRating *= 1.5;
