@@ -30,10 +30,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         public readonly int ObjectIndex;
 
         /// <summary>
-        /// Whether the object should carry a penalty due to being hittable using special techniques
-        /// making it easier to do so.
+        /// Effective BPM of the object, required for reading difficulty calculation
         /// </summary>
-        public bool StaminaCheese;
+        public double EffectiveBPM;
 
         /// <summary>
         /// Creates a new difficulty hit object.
