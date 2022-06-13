@@ -15,6 +15,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         [JsonProperty("accuracy")]
         public double Accuracy { get; set; }
 
+        [JsonProperty("reading")]
+        public double Reading { get; set; }
+
         public override IEnumerable<PerformanceDisplayAttribute> GetAttributesForDisplay()
         {
             foreach (var attribute in base.GetAttributesForDisplay())
@@ -22,6 +25,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             yield return new PerformanceDisplayAttribute(nameof(Difficulty), "Difficulty", Difficulty);
             yield return new PerformanceDisplayAttribute(nameof(Accuracy), "Accuracy", Accuracy);
+            yield return new PerformanceDisplayAttribute(nameof(Reading), "Reading", Reading);
         }
     }
 }

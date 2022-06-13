@@ -33,44 +33,36 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             countMeh = score.Statistics.GetValueOrDefault(HitResult.Meh);
             countMiss = score.Statistics.GetValueOrDefault(HitResult.Miss);
 
-            double multiplier = 1.1; // This is being adjusted to keep the final pp value scaled around what it used to be when changing things
-
-            if (score.Mods.Any(m => m is ModNoFail))
-                multiplier *= 0.90;
-
-            if (score.Mods.Any(m => m is ModHidden))
-                multiplier *= 1.10;
-
             double difficultyValue = computeDifficultyValue(score, taikoAttributes);
             double accuracyValue = computeAccuracyValue(score, taikoAttributes);
+            double readingValue = computeReadingValue(score, taikoAttributes);
             double totalValue =
                 Math.Pow(
                     Math.Pow(difficultyValue, 1.1) +
-                    Math.Pow(accuracyValue, 1.1), 1.0 / 1.1
-                ) * multiplier;
+                    Math.Pow(accuracyValue, 1.0) +
+                    Math.Pow(readingValue, 1.0), 1.0 / 1.1
+                );
 
             return new TaikoPerformanceAttributes
             {
                 Difficulty = difficultyValue,
                 Accuracy = accuracyValue,
+                Reading = readingValue,
                 Total = totalValue
             };
         }
 
         private double computeDifficultyValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
         {
-            double difficultyValue = Math.Pow(5 * Math.Max(1.0, attributes.StarRating / 0.175) - 4.0, 2.25) / 450.0;
+            double difficultyValue = Math.Pow(5.0 * Math.Max(1.0, attributes.StarRating / 0.170) - 4.0, 2.25) / 425.0;
 
             double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
             difficultyValue *= lengthBonus;
 
-            difficultyValue *= Math.Pow(0.985, countMiss);
+            difficultyValue *= Math.Pow(0.975, countMiss);
 
             if (score.Mods.Any(m => m is ModHidden))
-                difficultyValue *= 1.025;
-
-            if (score.Mods.Any(m => m is ModFlashlight<TaikoHitObject>))
-                difficultyValue *= 1.05 * lengthBonus;
+                difficultyValue *= 1.125;
 
             return difficultyValue * score.Accuracy;
         }
@@ -80,10 +72,31 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (attributes.GreatHitWindow <= 0)
                 return 0;
 
-            double accValue = Math.Pow(150.0 / attributes.GreatHitWindow, 1.1) * Math.Pow(score.Accuracy, 15) * 22.0;
+            double accuracyValue = Math.Pow(150 / attributes.GreatHitWindow, 1.1) * Math.Pow(score.Accuracy, 15) * Math.Max(1.0, attributes.StarRating / 0.170);
 
-            // Bonus for many objects - it's harder to keep good accuracy up for longer
-            return accValue * Math.Min(1.15, Math.Pow(totalHits / 1500.0, 0.3));
+            double accuracylengthBonus = Math.Min(1.15, Math.Pow(totalHits / 1500.0, 0.3));
+            accuracyValue *= accuracylengthBonus;
+
+            if (score.Mods.Any(m => m is ModHidden))
+                accuracyValue *= 1.075;
+
+            return accuracyValue;
+        }
+
+        private double computeReadingValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
+        {
+            if (!score.Mods.Any(m => m is ModFlashlight<TaikoHitObject>))
+                return 0.0;
+
+            double readingValue = Math.Max(1.5, Math.Pow(score.Accuracy, 15) * (4 * Math.Max(1.0, attributes.StarRating / 0.170)));
+
+            double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
+            readingValue *= lengthBonus;
+
+            if (score.Mods.Any(m => m is ModFlashlight<TaikoHitObject> && score.Mods.Any(m => m is ModHidden)))
+                readingValue *= 1.5;
+
+            return readingValue;
         }
 
         private int totalHits => countGreat + countOk + countMeh + countMiss;
