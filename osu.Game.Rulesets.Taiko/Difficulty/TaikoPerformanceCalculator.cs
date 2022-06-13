@@ -58,13 +58,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             double difficultyValue = Math.Pow(5 * Math.Max(1.0, attributes.StarRating / 0.175) - 4.0, 2.25) / 450.0;
 
-            double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
+            double lengthBonus = 1.0 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
             difficultyValue *= lengthBonus;
 
-            difficultyValue *= Math.Pow(0.985, countMiss);
+            difficultyValue *= Math.Pow(0.975, countMiss);
 
             if (score.Mods.Any(m => m is ModHidden))
-                difficultyValue *= 1.025;
+                difficultyValue *= 1.075;
 
             if (score.Mods.Any(m => m is ModFlashlight<TaikoHitObject>))
                 difficultyValue *= 1.05 * lengthBonus;
@@ -77,7 +77,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (attributes.GreatHitWindow <= 0)
                 return 0;
 
-            double accValue = Math.Pow(150.0 / attributes.GreatHitWindow, 1.1) * Math.Pow(score.Accuracy, 15) * 22.0;
+            double accuracyValue = Math.Pow(125 / attributes.GreatHitWindow, 1.1) * Math.Pow(score.Accuracy, 15) * Math.Max(1.0, attributes.StarRating / 0.250);
+
+            double accuracylengthBonus = Math.Min(1.15, Math.Pow(totalHits / 1500.0, 0.3));
+            accuracyValue *= accuracylengthBonus;
+
+            if (score.Mods.Any(m => m is ModHidden))
+                accuracyValue *= 1.025;
 
             // Bonus for many objects - it's harder to keep good accuracy up for longer
             return accValue * Math.Min(1.15, Math.Pow(totalHits / 1500.0, 0.3));
