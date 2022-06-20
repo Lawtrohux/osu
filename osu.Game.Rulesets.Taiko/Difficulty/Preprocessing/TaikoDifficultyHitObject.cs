@@ -41,10 +41,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
 
         /// <summary>
         /// Creates a list of <see cref="TaikoDifficultyHitObject"/>s from a <see cref="IBeatmap"/>s.
-        /// TODO: Review this - this is moved here from TaikoDifficultyCalculator so that TaikoDifficultyCalculator can
-        ///       have less knowledge of implementation details (i.e. creating all the different hitObject lists, and
-        ///       calling FindRepetitionInterval for the final object). The down side of this is
-        ///       TaikoDifficultyHitObejct.CreateDifficultyHitObjects is now pretty much a proxy for this.
+        /// This is moved here from TaikoDifficultyCalculator to allow for less knowledge of implementation.
         /// </summary>
         /// <param name="beatmap">The beatmap from which the list of <see cref="TaikoDifficultyHitObject"/> is created.</param>
         /// <param name="clockRate">The rate at which the gameplay clock is run at.</param>
@@ -59,7 +56,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             {
                 difficultyHitObject.Add(
                     new TaikoDifficultyHitObject(
-                        beatmap.HitObjects[i], beatmap.HitObjects[i - 1], beatmap.HitObjects[i - 2], clockRate, difficultyHitObject,
+                        beatmap.HitObjects[i], beatmap.HitObjects[i - 1],
+                        beatmap.HitObjects[i - 2], clockRate, difficultyHitObject,
                         centreObjects, rimObjects, noteObjects, difficultyHitObject.Count)
                 );
             }
@@ -85,10 +83,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         /// TODO: This argument list is getting long, we might want to refactor this into a static method that create
         ///       all <see cref="DifficultyHitObject"/>s from a <see cref="IBeatmap"/>.
         private TaikoDifficultyHitObject(HitObject hitObject, HitObject lastObject, HitObject lastLastObject, double clockRate,
-            List<DifficultyHitObject> objects,
-            List<TaikoDifficultyHitObject> centreHitObjects,
-            List<TaikoDifficultyHitObject> rimHitObjects,
-            List<TaikoDifficultyHitObject> noteObjects, int index)
+                                         List<DifficultyHitObject> objects,
+                                         List<TaikoDifficultyHitObject> centreHitObjects,
+                                         List<TaikoDifficultyHitObject> rimHitObjects,
+                                         List<TaikoDifficultyHitObject> noteObjects, int index)
             : base(hitObject, lastObject, clockRate, objects, index)
         {
             var currentHit = hitObject as Hit;

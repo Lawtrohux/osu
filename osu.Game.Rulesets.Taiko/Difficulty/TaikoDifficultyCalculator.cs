@@ -55,14 +55,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (beatmap.HitObjects.Count == 0)
                 return new TaikoDifficultyAttributes { Mods = mods };
 
-            var combined = (Peaks)skills[0];
+            var skill = (Peaks)skills[0];
 
-            double colourRating = Math.Sqrt(combined.ColourDifficultyValue * difficulty_multiplier);
-            double rhythmRating = Math.Sqrt(combined.RhythmDifficultyValue * difficulty_multiplier);
-            double staminaRating = Math.Sqrt(combined.StaminaDifficultyValue * difficulty_multiplier);
+            double colourRating = Math.Sqrt(skill.ColourDifficultyValue * difficulty_multiplier);
+            double rhythmRating = Math.Sqrt(skill.RhythmDifficultyValue * difficulty_multiplier);
+            double staminaRating = Math.Sqrt(skill.StaminaDifficultyValue * difficulty_multiplier);
 
-            double combinedRating = combined.DifficultyValue();
-            double starRating = rescale(combinedRating * difficulty_multiplier);
+            double difficultyRating = skill.PeaksDifficultyValue * difficulty_multiplier;
+            double starRating = rescale(difficultyRating);
 
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
@@ -74,7 +74,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 StaminaDifficulty = staminaRating,
                 RhythmDifficulty = rhythmRating,
                 ColourDifficulty = colourRating,
-                PeakDifficulty = combinedRating,
                 GreatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate,
                 MaxCombo = beatmap.HitObjects.Count(h => h is Hit),
             };

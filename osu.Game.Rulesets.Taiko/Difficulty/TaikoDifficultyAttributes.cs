@@ -30,12 +30,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         public double ColourDifficulty { get; set; }
 
         /// <summary>
-        /// The difficulty corresponding to the hardest parts of the map.
-        /// </summary>
-        [JsonProperty("peak_difficulty")]
-        public double PeakDifficulty { get; set; }
-
-        /// <summary>
         /// The perceived hit window for a GREAT hit inclusive of rate-adjusting mods (DT/HT/etc).
         /// </summary>
         /// <remarks>

@@ -4,7 +4,6 @@ using System.Linq;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Mods;
-using osu.Game.Rulesets.Taiko.Difficulty.Evaluators;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 {
@@ -23,6 +22,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         public double ColourDifficultyValue => colour.DifficultyValue() * colour_skill_multiplier;
         public double RhythmDifficultyValue => rhythm.DifficultyValue() * rhythm_skill_multiplier;
         public double StaminaDifficultyValue => stamina.DifficultyValue() * stamina_skill_multiplier;
+        public double PeaksDifficultyValue => DifficultyValue();
 
         public Peaks(Mod[] mods)
             : base(mods)
@@ -87,5 +87,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
             return difficulty;
         }
+
+        /// <summary>
+        /// Applies a final re-scaling of the star rating to bring maps with recorded full combos below 9.5 stars.
+        /// </summary>
+        /// <param name="sr">The raw star rating value before re-scaling.</param>
+        private double rescale(double sr)
+        {
+            if (sr < 0) return sr;
+
+            return 10.43 * Math.Log(sr / 8 + 1);
+        }
     }
+
 }

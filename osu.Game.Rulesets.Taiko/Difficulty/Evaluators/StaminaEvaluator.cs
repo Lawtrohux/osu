@@ -8,7 +8,7 @@ using osu.Game.Rulesets.Taiko.Objects;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 {
-    public class StaminaEvaluator
+    public static class StaminaEvaluator
     {
         /// <summary>
         /// Applies a speed bonus dependent on the time since the last hit performed using this key.

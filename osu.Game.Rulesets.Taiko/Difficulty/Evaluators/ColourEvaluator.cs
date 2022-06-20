@@ -4,7 +4,7 @@ using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 {
-    public class ColourEvaluator
+    public static class ColourEvaluator
     {
         // TODO - Share this sigmoid
         private static double sigmoid(double val, double center, double width)
@@ -29,8 +29,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                 objectStrain *= sigmoid(colour.DeltaRunLength, 2, 2) * 0.5 + 0.5;
             }
 
-            objectStrain *= -sigmoid(colour.RepetitionInterval, 1, 8); // * 0.5 + 0.5;
-            // Console.WriteLine($"{current.StartTime},{colour.Delta},{colour.RepetitionInterval},{objectStrain}");
+            objectStrain *= -sigmoid(colour.RepetitionInterval, 1, 8);
             return objectStrain;
         }
     }
