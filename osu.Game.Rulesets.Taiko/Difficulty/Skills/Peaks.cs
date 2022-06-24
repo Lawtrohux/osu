@@ -1,5 +1,6 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
+
 #nullable disable
 
 using System;
@@ -91,17 +92,5 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
             return difficulty;
         }
-
-        /// <summary>
-        /// Applies a final re-scaling of the star rating to bring maps with recorded full combos below 9.5 stars.
-        /// </summary>
-        /// <param name="sr">The raw star rating value before re-scaling.</param>
-        private double rescale(double sr)
-        {
-            if (sr < 0) return sr;
-
-            return 10.43 * Math.Log(sr / 8 + 1);
-        }
     }
-
 }
