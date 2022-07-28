@@ -20,6 +20,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private int countOk;
         private int countMeh;
         private int countMiss;
+        private double ratioMiss;
 
         public TaikoPerformanceCalculator()
             : base(new TaikoRuleset())
@@ -34,6 +35,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             countOk = score.Statistics.GetValueOrDefault(HitResult.Ok);
             countMeh = score.Statistics.GetValueOrDefault(HitResult.Meh);
             countMiss = score.Statistics.GetValueOrDefault(HitResult.Miss);
+            ratioMiss = (double)countMiss / totalHits;
 
             double multiplier = 1.12; // This is being adjusted to keep the final pp value scaled around what it used to be when changing things
 
@@ -66,7 +68,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
             difficultyValue *= lengthBonus;
 
-            difficultyValue *= Math.Pow(0.986, countMiss);
+            difficultyValue *= ratioMiss;
 
             if (score.Mods.Any(m => m is ModEasy))
                 difficultyValue *= 0.980;
