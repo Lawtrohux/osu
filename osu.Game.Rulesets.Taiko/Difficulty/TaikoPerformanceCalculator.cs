@@ -21,6 +21,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private int countMeh;
         private int countMiss;
 
+        private double effectiveMissCount;
+
         public TaikoPerformanceCalculator()
             : base(new TaikoRuleset())
         {
@@ -34,14 +36,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             countOk = score.Statistics.GetValueOrDefault(HitResult.Ok);
             countMeh = score.Statistics.GetValueOrDefault(HitResult.Meh);
             countMiss = score.Statistics.GetValueOrDefault(HitResult.Miss);
+			
+            // Calculates a % based misscount, with the maps below 2000 hitobjects having a higher weight applied to misses.
+            effectiveMissCount = Math.Max(1.0, 2000 / totalHits) * countMiss;
 
-            double multiplier = 1.12; // This is being adjusted to keep the final pp value scaled around what it used to be when changing things
+            double multiplier = 1.14;
 
             if (score.Mods.Any(m => m is ModHidden))
                 multiplier *= 1.075;
 
             if (score.Mods.Any(m => m is ModEasy))
-                multiplier *= 0.975;
+                multiplier *= 0.965;
 
             double difficultyValue = computeDifficultyValue(score, taikoAttributes);
             double accuracyValue = computeAccuracyValue(score, taikoAttributes);
@@ -55,6 +60,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             {
                 Difficulty = difficultyValue,
                 Accuracy = accuracyValue,
+                EffectiveMissCount = effectiveMissCount,
                 Total = totalValue
             };
         }
@@ -63,13 +69,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             double difficultyValue = Math.Pow(5 * Math.Max(1.0, attributes.StarRating / 0.115) - 4.0, 2.25) / 1150.0;
 
-            double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
+            double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 3000.0);
             difficultyValue *= lengthBonus;
 
-            difficultyValue *= Math.Pow(0.986, countMiss);
+            difficultyValue *= Math.Pow(0.986, effectiveMissCount);
 
             if (score.Mods.Any(m => m is ModEasy))
-                difficultyValue *= 0.980;
+                difficultyValue *= 0.970;
 
             if (score.Mods.Any(m => m is ModHidden))
                 difficultyValue *= 1.025;
