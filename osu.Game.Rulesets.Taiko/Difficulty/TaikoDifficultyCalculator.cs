@@ -176,7 +176,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 StarRating = starRating,
                 Mods = mods,
                 StaminaDifficulty = staminaRating,
-                deltaDifficulty = deltaRating,
+                deltaDifficulty = deltaRating / 4,
                 MonoStaminaFactor = monoStaminaFactor,
                 SimplePattern = patternPenalty,
                 RhythmDifficulty = rhythmRating * 8,
