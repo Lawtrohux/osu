@@ -53,6 +53,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             {
                 new Rhythm(mods, hitWindows.WindowFor(HitResult.Great) / clockRate),
                 new Reading(mods),
+                new Delta(mods),
                 new Colour(mods),
                 new Stamina(mods, false),
                 new Stamina(mods, true)
@@ -137,12 +138,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             Colour colour = (Colour)skills.First(x => x is Colour);
             Rhythm rhythm = (Rhythm)skills.First(x => x is Rhythm);
+            Delta delta = (Delta)skills.First(x => x is Delta);
             Reading reading = (Reading)skills.First(x => x is Reading);
             Stamina stamina = (Stamina)skills.First(x => x is Stamina);
             Stamina singleColourStamina = (Stamina)skills.Last(x => x is Stamina);
 
             double colourRating = colour.DifficultyValue() * colour_skill_multiplier;
             double rhythmRating = rhythm.DifficultyValue() * rhythm_skill_multiplier;
+            double deltaRating = delta.DifficultyValue();
             double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
             double objectDensity = reading.ObjectDensity;
             double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
@@ -173,6 +176,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 StarRating = starRating,
                 Mods = mods,
                 StaminaDifficulty = staminaRating,
+                deltaDifficulty = deltaRating,
                 MonoStaminaFactor = monoStaminaFactor,
                 SimplePattern = patternPenalty,
                 RhythmDifficulty = rhythmRating * 8,

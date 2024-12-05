@@ -35,6 +35,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         public double ReadingDifficulty { get; set; }
 
         /// <summary>
+        /// The difficulty corresponding to the reading skill.
+        /// </summary>
+        [JsonProperty("delta")]
+        public double deltaDifficulty { get; set; }
+
+        /// <summary>
         /// Determines the object density of a beatmap, based on DeltaTime.
         /// </summary>
         [JsonProperty("object_density")]
