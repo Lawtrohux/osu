@@ -110,7 +110,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             // We count difficult stamina strains to ensure that even if there's no rhythm, very heavy stamina maps still give their respective difficulty.
             double staminaTransition = Math.Clamp((staminaStrains - stamina_threshold) / (1350 - stamina_threshold), 0, 1);
-            double staminaFactor = (1 - staminaTransition) * 1.0 + staminaTransition * 0.85;
+            double staminaFactor = (1 - staminaTransition) * 1.0 + staminaTransition * 0.70;
             staminaFactor *= Math.Min(1, stamina_threshold / Math.Min(2000, staminaStrains));
 
             simpleRhythmPenalty = patternRating(rhythmRating, 2.5, 5, colourRating);
