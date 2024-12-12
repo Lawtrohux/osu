@@ -69,6 +69,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             double objectStrain = 0.5; // Add a base strain to all objects
             objectStrain += speedBonus(taikoCurrent.StartTime - keyPrevious.StartTime);
+
             return objectStrain;
         }
     }

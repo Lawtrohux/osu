@@ -44,6 +44,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             var currentObject = current as TaikoDifficultyHitObject;
             int index = currentObject?.Colour.MonoStreak?.HitObjects.IndexOf(currentObject) ?? 0;
 
+            double deltaTimePenalty = current.DeltaTime <= 50
+                ? 1.0
+                : Math.Min(1.0, 1.0 + ((50 - current.DeltaTime) / 50.0) * 0.03);
+
+            double monoNoteCount = Math.Clamp(index, 10, 30);
+            double monoBonus = 1.0 + ((monoNoteCount - 10) / 20.0) * 0.03;
+
+            double staminaBonus = monoBonus * deltaTimePenalty;
+
+            currentStrain *= Math.Max(1.0, staminaBonus);
+
             if (singleColourStamina)
                 return currentStrain / (1 + Math.Exp(-(index - 10) / 2.0));
 
