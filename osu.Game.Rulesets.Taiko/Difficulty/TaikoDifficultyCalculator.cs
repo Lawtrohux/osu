@@ -23,10 +23,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
         private const double difficulty_multiplier = 0.084375;
-        private const double rhythm_skill_multiplier = 0.2 * difficulty_multiplier;
+        private const double rhythm_skill_multiplier = 0.284 * difficulty_multiplier;
         private const double reading_skill_multiplier = 0.100 * difficulty_multiplier;
         private const double colour_skill_multiplier = 0.375 * difficulty_multiplier;
         private const double stamina_skill_multiplier = 0.375 * difficulty_multiplier;
+
+        private double staminaLengthBonus;
 
         public override int Version => 20241115;
 
@@ -107,8 +109,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             double colourDifficultStrains = colour.CountTopWeightedStrains();
             double rhythmDifficultStrains = rhythm.CountTopWeightedStrains();
-            double readingDifficultStrains= reading.CountTopWeightedStrains();
-            double staminaDifficultStrains = stamina.CountTopWeightedStrains();
+            double readingDifficultStrains = reading.CountTopWeightedStrains();
+            double staminaDifficultStrains = stamina.CountTopWeightedStrains() * clockRate;
+
+            staminaLengthBonus = Math.Max(1, 1.2 * Math.Min(1.0, (staminaDifficultStrains - 1500) / 500.0));
 
             double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax);
             double starRating = rescale(combinedRating * 1.4);
@@ -168,7 +172,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
                 double readingPeak = readingPeaks[i] * reading_skill_multiplier;
                 double colourPeak = colourPeaks[i] * colour_skill_multiplier;
-                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier;
+                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * staminaLengthBonus;
 
                 if (isRelax)
                 {
