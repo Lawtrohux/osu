@@ -1,35 +1,36 @@
 ﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+
 namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm
 {
-    /// <summary>
-    /// Represents a rhythm change in a taiko map.
-    /// </summary>
     public class TaikoDifficultyHitObjectRhythm
     {
-        /// <summary>
-        /// The difficulty multiplier associated with this rhythm change.
-        /// </summary>
-        public readonly double Difficulty;
+        public List<double> PreviousEventDeltaTimes { get; private set; }
 
-        /// <summary>
-        /// The ratio of current <see cref="osu.Game.Rulesets.Difficulty.Preprocessing.DifficultyHitObject.DeltaTime"/>
-        /// to previous <see cref="osu.Game.Rulesets.Difficulty.Preprocessing.DifficultyHitObject.DeltaTime"/> for the rhythm change.
-        /// A <see cref="Ratio"/> above 1 indicates a slow-down; a <see cref="Ratio"/> below 1 indicates a speed-up.
-        /// </summary>
-        public readonly double Ratio;
+        public double? BaseInterval { get; private set; }
 
-        /// <summary>
-        /// Creates an object representing a rhythm change.
-        /// </summary>
-        /// <param name="numerator">The numerator for <see cref="Ratio"/>.</param>
-        /// <param name="denominator">The denominator for <see cref="Ratio"/></param>
-        /// <param name="difficulty">The difficulty multiplier associated with this rhythm change.</param>
-        public TaikoDifficultyHitObjectRhythm(int numerator, int denominator, double difficulty)
+        public TaikoDifficultyHitObjectRhythm(
+            TaikoDifficultyHitObject hitObject,
+            double maxWindowMs,
+            int maxObjects)
         {
-            Ratio = numerator / (double)denominator;
-            Difficulty = difficulty;
+            BaseInterval = hitObject.DeltaTime;
+            PreviousEventDeltaTimes = new List<double>();
+
+            var current = hitObject.Previous(0);
+            while (PreviousEventDeltaTimes.Count < maxObjects &&
+                PreviousEventDeltaTimes.LastOrDefault(0) < maxWindowMs &&
+                current != null)
+            {
+                Debug.Assert(hitObject.StartTime > current.StartTime);
+                PreviousEventDeltaTimes.Add(hitObject.StartTime - current.StartTime);
+                current = current.Previous(0);
+            }
         }
     }
 }

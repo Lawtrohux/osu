@@ -21,8 +21,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
-        private const double difficulty_multiplier = 0.084375;
-        private const double rhythm_skill_multiplier = 0.2 * difficulty_multiplier;
+        private const double difficulty_multiplier = 0.057;
+        private const double rhythm_skill_multiplier = 0.375 * difficulty_multiplier;
         private const double colour_skill_multiplier = 0.375 * difficulty_multiplier;
         private const double stamina_skill_multiplier = 0.375 * difficulty_multiplier;
 
@@ -37,7 +37,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
             return new Skill[]
             {
-                new Rhythm(mods),
+                new Rhythm(beatmap, mods, clockRate),
                 new Colour(mods),
                 new Stamina(mods, false),
                 new Stamina(mods, true)
