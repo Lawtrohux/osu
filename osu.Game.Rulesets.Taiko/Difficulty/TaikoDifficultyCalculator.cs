@@ -155,7 +155,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             for (int i = 0; i < colourPeaks.Count; i++)
             {
                 double colourPeak = colourPeaks[i] * 0.034;
-                double rhythmPeak = rhythmPeaks[i] * 0.017;
+                double rhythmPeak = rhythmPeaks[i] * 0.043;
                 double staminaPeak = staminaPeaks[i] * 0.036;
 
                 if (isRelax)
