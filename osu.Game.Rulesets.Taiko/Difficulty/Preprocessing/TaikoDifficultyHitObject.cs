@@ -23,6 +23,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         private readonly IReadOnlyList<TaikoDifficultyHitObject>? monoDifficultyHitObjects;
 
         /// <summary>
+        /// The adjusted BPM of this hit object, based on its slider velocity and scroll speed.
+        /// </summary>
+        public double EffectiveBPM;
+
+        /// <summary>
+        /// The current slider velocity of this hit object.
+        /// </summary>
+        public double CurrentSliderVelocity;
+
+        /// <summary>
         /// The index of this <see cref="TaikoDifficultyHitObject"/> in <see cref="monoDifficultyHitObjects"/>.
         /// </summary>
         public readonly int MonoIndex;
