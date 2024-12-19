@@ -136,7 +136,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                 difficulty += evaluateDifficultyOf(rhythm.EvenHitObjects, hitWindow);
 
             if (rhythm.EvenPatterns?.FirstHitObject == hitObject) // Difficulty for EvenPatterns
-                difficulty += evaluateDifficultyOf(rhythm.EvenPatterns) * rhythm.Difficulty;
+                difficulty += evaluateDifficultyOf(rhythm.EvenPatterns);
+
+            difficulty *= rhythm.Difficulty;
 
             return difficulty;
         }

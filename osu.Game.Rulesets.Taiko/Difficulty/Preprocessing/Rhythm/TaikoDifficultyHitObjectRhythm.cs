@@ -35,7 +35,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm
         public readonly double Difficulty;
 
         /// <summary>
-        /// List of most common rhythm changes in taiko maps. This is used as a display value.
+        /// List of most common rhythm changes in taiko maps. Based on how each object's interval compares to the previous object.
         /// </summary>
         /// <remarks>
         /// The general guidelines for the values are:
@@ -48,13 +48,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm
         {
             new TaikoDifficultyHitObjectRhythm(1, 1, 0.0),
             new TaikoDifficultyHitObjectRhythm(2, 1, 0.3),
-            new TaikoDifficultyHitObjectRhythm(1, 2, 0.5),
+            new TaikoDifficultyHitObjectRhythm(1, 2, 0.3),
             new TaikoDifficultyHitObjectRhythm(3, 1, 0.3),
-            new TaikoDifficultyHitObjectRhythm(1, 3, 0.35),
-            new TaikoDifficultyHitObjectRhythm(3, 2, 0.6),
+            new TaikoDifficultyHitObjectRhythm(1, 3, 0.3),
+            new TaikoDifficultyHitObjectRhythm(3, 2, 0.3),
             new TaikoDifficultyHitObjectRhythm(2, 3, 0.4),
-            new TaikoDifficultyHitObjectRhythm(5, 4, 0.5),
-            new TaikoDifficultyHitObjectRhythm(4, 5, 0.7)
+            new TaikoDifficultyHitObjectRhythm(5, 4, 0.3),
+            new TaikoDifficultyHitObjectRhythm(4, 5, 0.3)
         };
 
         /// <summary>
