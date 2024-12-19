@@ -29,6 +29,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         public double RhythmDifficulty { get; set; }
 
         /// <summary>
+        /// The difficulty corresponding to the reading skill.
+        /// </summary>
+        [JsonProperty("reading_difficulty")]
+        public double ReadingDifficulty { get; set; }
+
+        /// <summary>
         /// The difficulty corresponding to the colour skill.
         /// </summary>
         [JsonProperty("colour_difficulty")]
@@ -42,6 +48,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         [JsonProperty("rhythm_difficult_strains")]
         public double RhythmTopStrains { get; set; }
+
+        [JsonProperty("reading_difficult_strains")]
+        public double ReadingTopStrains { get; set; }
 
         [JsonProperty("colour_difficult_strains")]
         public double ColourTopStrains { get; set; }
