@@ -16,11 +16,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Rhythm
     {
         public TaikoDifficultyHitObjectRhythm RhythmData { get; private set; }
 
-        private double harmonicsCount;
+        private readonly double harmonicsCount;
 
-        private double timeDecay;
+        private readonly double timeDecay;
 
-        private double countDecay;
+        private readonly double countDecay;
 
         /// <summary>
         /// Creates a new field to calculate rhythmic misalignment.
@@ -46,11 +46,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Rhythm
             if (!RhythmData.BaseInterval.HasValue) return 0;
 
             List<(double dt, double amplitude)> residue = (RhythmData.PreviousEventDeltaTimes ?? [])
-                .Select(x => (dt: x, amplitude: 1d))
-                .ToList();
+                                                          .Select(x => (dt: x, amplitude: 1d))
+                                                          .ToList();
             List<double> decayMultipliers = residue
-                .Select((x, i) => Math.Pow(timeDecay, x.dt / 1000) * Math.Pow(i, countDecay))
-                .ToList();
+                                            .Select((x, i) => Math.Pow(timeDecay, x.dt / 1000) * Math.Pow(i, countDecay))
+                                            .ToList();
 
             double leniencyExponent = calculateLeniencyExponent(hitWindowMs / RhythmData.BaseInterval.Value);
             double totalMisalignment = 0;
@@ -69,7 +69,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Rhythm
                 }
             }
 
-            // This is to avoid missing residues that aren't catched by any harmonic
+            // This is to avoid missing residue that isn't caught by harmonics.
             totalMisalignment += residue.Sum(x => x.amplitude * harmonicsCount);
 
             return totalMisalignment;
