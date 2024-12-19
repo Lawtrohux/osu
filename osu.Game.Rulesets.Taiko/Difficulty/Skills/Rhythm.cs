@@ -6,7 +6,7 @@ using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
-using osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Rhythm;
+using osu.Game.Rulesets.Taiko.Difficulty.Evaluators;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Taiko.Scoring;
 
@@ -17,21 +17,22 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </summary>
     public class Rhythm : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 3;
-        protected override double StrainDecayBase => 0;
+        protected override double SkillMultiplier => 1.0;
+        protected override double StrainDecayBase => 0.4;
 
-        private double greatHitWindowMs;
+        private readonly double greatHitWindow;
 
-        public Rhythm(IBeatmap beatmap, Mod[] mods, double clockRate) : base(mods)
+        public Rhythm(IBeatmap beatmap, Mod[] mods, double clockRate)
+            : base(mods)
         {
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
-            greatHitWindowMs = hitWindows.WindowFor(HitResult.Great) / clockRate;
+            greatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate;
         }
 
         protected override double StrainValueOf(DifficultyHitObject current)
         {
-            return RhythmEvaluator.EvaluateDifficultyOf((TaikoDifficultyHitObject)current, greatHitWindowMs);
+            return RhythmEvaluator.EvaluateDifficultyOf((TaikoDifficultyHitObject)current, greatHitWindow);
         }
     }
 }

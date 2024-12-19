@@ -23,8 +23,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
     {
         private const double difficulty_multiplier = 0.057;
         private const double rhythm_skill_multiplier = 0.375 * difficulty_multiplier;
-        private const double colour_skill_multiplier = 0.375 * difficulty_multiplier;
-        private const double stamina_skill_multiplier = 0.375 * difficulty_multiplier;
+        private const double colour_skill_multiplier = 0.450 * difficulty_multiplier;
+        private const double stamina_skill_multiplier = 0.450 * difficulty_multiplier;
 
         public override int Version => 20241115;
 
@@ -103,7 +103,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double staminaDifficultStrains = stamina.CountTopWeightedStrains();
 
             double combinedRating = combinedDifficultyValue(rhythm, colour, stamina, isRelax);
-            double starRating = rescale(combinedRating * 1.4);
+            double starRating = rescale(combinedRating * 1.3);
 
             // Converts are penalised outside the scope of difficulty calculation, as our assumptions surrounding standard play-styles becomes out-of-scope.
             if (beatmap.BeatmapInfo.Ruleset.OnlineID == 0)
@@ -154,9 +154,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             for (int i = 0; i < colourPeaks.Count; i++)
             {
-                double colourPeak = colourPeaks[i] * colour_skill_multiplier;
-                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
-                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier;
+                double colourPeak = colourPeaks[i] * 0.034;
+                double rhythmPeak = rhythmPeaks[i] * 0.017;
+                double staminaPeak = staminaPeaks[i] * 0.036;
 
                 if (isRelax)
                 {
