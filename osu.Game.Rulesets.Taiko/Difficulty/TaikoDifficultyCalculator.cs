@@ -21,10 +21,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
-        private const double difficulty_multiplier = 0.057;
-        private const double rhythm_skill_multiplier = 0.375 * difficulty_multiplier;
-        private const double colour_skill_multiplier = 0.450 * difficulty_multiplier;
-        private const double stamina_skill_multiplier = 0.450 * difficulty_multiplier;
+        private const double difficulty_multiplier = 0.068;
+        private const double rhythm_skill_multiplier = 0.490 * difficulty_multiplier;
+        private const double colour_skill_multiplier = 0.460 * difficulty_multiplier;
+        private const double stamina_skill_multiplier = 0.460 * difficulty_multiplier;
 
         public override int Version => 20241115;
 
@@ -154,9 +154,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             for (int i = 0; i < colourPeaks.Count; i++)
             {
-                double colourPeak = colourPeaks[i] * 0.034;
-                double rhythmPeak = rhythmPeaks[i] * 0.043;
-                double staminaPeak = staminaPeaks[i] * 0.036;
+                double colourPeak = colourPeaks[i] * colour_skill_multiplier;
+                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
+                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier;
 
                 if (isRelax)
                 {

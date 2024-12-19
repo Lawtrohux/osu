@@ -54,12 +54,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm
                                                 Math.Pow(cycleDecay, x.dt / RhythmData.BaseInterval.Value))
                                             .ToList();
 
-            double leniencyExponent = calculateLeniencyExponent(hitWindowMs / RhythmData.BaseInterval.Value);
             double totalMisalignment = 0;
 
             for (int harmonic = 1; harmonic <= harmonicsCount; harmonic++)
             {
                 double alignmentInterval = RhythmData.BaseInterval.Value / harmonic;
+                double leniencyExponent = calculateLeniencyExponent(hitWindowMs / alignmentInterval);
 
                 for (int i = 0; i < residue.Count; i++)
                 {
@@ -72,7 +72,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm
             }
 
             // This is to avoid missing residue that isn't caught by harmonics.
-            totalMisalignment += residue.Sum(x => x.amplitude * harmonicsCount);
+            totalMisalignment += residue
+                .Select((x, i) => x.amplitude * decayMultipliers[i])
+                .Sum((x) => x * harmonicsCount);
 
             return totalMisalignment;
         }

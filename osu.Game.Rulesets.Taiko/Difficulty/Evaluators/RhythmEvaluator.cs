@@ -12,8 +12,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
             TaikoDifficultyHitObject hitObject,
             double hitWindowMs)
         {
-            var alignmentField = new TaikoRhythmicAlignmentField(hitObject.Rhythm, 4, 0.7071, 0.7071);
-            return alignmentField.CalculateMisalignment(hitWindowMs);
+            var alignmentField = new TaikoRhythmicAlignmentField(hitObject.Rhythm, 4, 0.1, 0.7071);
+            double misalignment = alignmentField.CalculateMisalignment(hitWindowMs);
+            return misalignment;
         }
     }
 }

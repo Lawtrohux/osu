@@ -23,6 +23,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm
 
             var current = hitObject.Previous(0);
 
+            if (current == null || hitObject.DeltaTime / current.DeltaTime > 3.1)
+            {
+                return;
+            }
+
             while (PreviousEventDeltaTimes.Count < maxObjects &&
                    PreviousEventDeltaTimes.LastOrDefault(0) < maxWindowMs &&
                    current != null)

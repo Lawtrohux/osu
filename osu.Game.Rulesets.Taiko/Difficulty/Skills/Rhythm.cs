@@ -17,8 +17,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
     /// </summary>
     public class Rhythm : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 1.0;
-        protected override double StrainDecayBase => 0.4;
+        protected override double SkillMultiplier => 16.0;
+        protected override double StrainDecayBase => 0.0;
 
         private readonly double greatHitWindow;
 
