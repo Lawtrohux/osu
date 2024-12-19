@@ -4,9 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm;
 
-namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Rhythm
+namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm
 {
     /// <summary>
     /// Stores amplitude points data by time. Getting amplitude at a specific time is defined as the sum of amplitudes
@@ -20,7 +19,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Rhythm
 
         private readonly double timeDecay;
 
-        private readonly double countDecay;
+        private readonly double cycleDecay;
 
         /// <summary>
         /// Creates a new field to calculate rhythmic misalignment.
@@ -28,17 +27,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Rhythm
         /// <param name="rhythmData">The pattern associated with the note to calculate misalignment for.</param>
         /// <param name="harmonicsCount">The amount of harmonics to calculate.</param>
         /// <param name="timeDecay">How much to decay values per second.</param>
-        /// <param name="countDecay">How much to decay values per event.</param>
+        /// <param name="cycleDecay">How much to decay values per event.</param>
         public TaikoRhythmicAlignmentField(
             TaikoDifficultyHitObjectRhythm rhythmData,
             double harmonicsCount,
             double timeDecay,
-            double countDecay)
+            double cycleDecay)
         {
             RhythmData = rhythmData;
             this.harmonicsCount = harmonicsCount;
             this.timeDecay = timeDecay;
-            this.countDecay = countDecay;
+            this.cycleDecay = cycleDecay;
         }
 
         public double CalculateMisalignment(double hitWindowMs)
@@ -48,8 +47,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Rhythm
             List<(double dt, double amplitude)> residue = (RhythmData.PreviousEventDeltaTimes ?? [])
                                                           .Select(x => (dt: x, amplitude: 1d))
                                                           .ToList();
+
             List<double> decayMultipliers = residue
-                                            .Select((x, i) => Math.Pow(timeDecay, x.dt / 1000) * Math.Pow(i, countDecay))
+                                            .Select((x, i) =>
+                                                Math.Pow(timeDecay, x.dt / 1000) *
+                                                Math.Pow(cycleDecay, x.dt / RhythmData.BaseInterval.Value))
                                             .ToList();
 
             double leniencyExponent = calculateLeniencyExponent(hitWindowMs / RhythmData.BaseInterval.Value);
