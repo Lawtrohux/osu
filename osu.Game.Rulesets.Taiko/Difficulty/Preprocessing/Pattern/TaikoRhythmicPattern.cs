@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern.Data
+namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
 {
     public class TaikoRhythmicPattern
     {

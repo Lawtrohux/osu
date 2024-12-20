@@ -1,12 +1,14 @@
 // Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using osu.Framework.Extensions.IEnumerableExtensions;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Objects;
-using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern.Data;
+using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern;
 using osu.Game.Rulesets.Taiko.Objects;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
@@ -55,6 +57,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         IEnumerator IEnumerable.GetEnumerator()
         {
             return new PreviousObjectEnumerator(start);
+        }
+    }
+
+    internal static class CollectionUtils
+    {
+        public static void ForEachPair<SourceType>(
+            this IEnumerable<SourceType> source, Action<SourceType, SourceType> action)
+        {
+            source.Zip(source.Skip(1), source.SkipLast(1))
+                .ForEach(x => action(x.First, x.Second));
         }
     }
 
@@ -155,5 +167,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         public TaikoDifficultyHitObject? PreviousMono(int backwardsIndex) => monoDifficultyHitObjects?.ElementAtOrDefault(MonoIndex - (backwardsIndex + 1));
 
         public IEnumerable<TaikoDifficultyHitObject> PreviousObjects => new PreviousDifficultyHitObjectEnumerable(this);
+
+
     }
 }

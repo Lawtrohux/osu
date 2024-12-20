@@ -15,22 +15,25 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 {
     public class Pattern : StrainDecaySkill
     {
-        protected override double SkillMultiplier => 0.09;
+        protected override double SkillMultiplier => 0.7;
 
         protected override double StrainDecayBase => 0.4;
 
         private double greatHitWindowMs;
+
+        private double targetHitWindow;
 
         public Pattern(IBeatmap beatmap, Mod[] mods, double clockRate) : base(mods)
         {
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
             greatHitWindowMs = hitWindows.WindowFor(HitResult.Great) / clockRate;
+            targetHitWindow = hitWindows.WindowFor(HitResult.Ok) / clockRate / 2;
         }
 
         protected override double StrainValueOf(DifficultyHitObject current)
         {
-            return PatternEvaluator.EvaluateDifficultyOf((TaikoDifficultyHitObject)current, greatHitWindowMs);
+            return PatternEvaluator.EvaluateDifficultyOf((TaikoDifficultyHitObject)current, targetHitWindow);
         }
     }
 }

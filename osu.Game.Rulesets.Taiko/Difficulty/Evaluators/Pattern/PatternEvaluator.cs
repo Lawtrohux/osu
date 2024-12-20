@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
+using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
 {
@@ -18,6 +19,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
             double rhythmMisalignment =
                 new TaikoRhythmicAlignmentField(hitObject.PatternData.NoteRhythm, 4, 0.7071, 0.7071)
                 .CalculateMisalignment(hitWindowMs);
+            rhythmMisalignment *= 0.66;
 
             double monoMisalignment =
                 new TaikoRhythmicAlignmentField(hitObject.PatternData.MonoRhythm, 4, 0.5, 0.5)

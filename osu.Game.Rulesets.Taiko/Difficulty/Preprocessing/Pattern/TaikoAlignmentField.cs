@@ -4,9 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern.Data;
 
-namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
+namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
 {
     /// <summary>
     /// Stores amplitude points data by time. Getting amplitude at a specific time is defined as the sum of amplitudes
@@ -20,7 +19,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
 
         private double timeDecay;
 
-        private double countDecay;
+        private double cycleDecay;
 
         /// <summary>
         /// Creates a new field to calculate rhythmic misalignment.
@@ -28,17 +27,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
         /// <param name="rhythmicPattern">The pattern associated with the note to calculate misalignment for.</param>
         /// <param name="harmonicsCount">The amount of harmonics to calculate.</param>
         /// <param name="timeDecay">How much to decay values per second.</param>
-        /// <param name="countDecay">How much to decay values per event.</param>
+        /// <param name="cycleDecay">How much to decay values per event.</param>
         public TaikoRhythmicAlignmentField(
             TaikoRhythmicPattern rhythmicPattern,
             double harmonicsCount,
             double timeDecay,
-            double countDecay)
+            double cycleDecay)
         {
             RhythmicPattern = rhythmicPattern;
             this.harmonicsCount = harmonicsCount;
             this.timeDecay = timeDecay;
-            this.countDecay = countDecay;
+            this.cycleDecay = cycleDecay;
         }
 
         public double CalculateMisalignment(double hitWindowMs)
@@ -49,7 +48,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
                 .Select(x => (dt: x, amplitude: 1d))
                 .ToList();
             List<double> decayMultipliers = residue
-                .Select((x, i) => Math.Pow(timeDecay, x.dt / 1000) * Math.Pow(i, countDecay))
+                .Select((x, i) =>
+                    Math.Pow(timeDecay, x.dt / 1000) *
+                    Math.Pow(cycleDecay, x.dt / RhythmicPattern.BaseInterval.Value))
                 .ToList();
 
             double leniencyExponent = calculateLeniencyExponent(hitWindowMs / RhythmicPattern.BaseInterval.Value);
@@ -70,7 +71,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
             }
 
             // This is to avoid missing residues that aren't catched by any harmonic
-            totalMisalignment += residue.Sum(x => x.amplitude * harmonicsCount);
+            totalMisalignment += residue
+                .Select((x, i) => x.amplitude * decayMultipliers[i])
+                .Sum((x) => x * harmonicsCount);
 
             return totalMisalignment;
         }

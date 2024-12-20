@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using osu.Game.Rulesets.Taiko.Objects;
 
-namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern.Data
+namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
 {
     public class TaikoPatternData
     {
