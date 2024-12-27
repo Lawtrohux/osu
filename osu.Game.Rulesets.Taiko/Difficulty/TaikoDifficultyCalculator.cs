@@ -123,7 +123,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             LengthBonus = 1
                           + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 7500, 0), 0.5)
-                          + Math.Min(Math.Max((readingDifficultStrains - 150) / 50, 0), 0.1);
+                          + Math.Min(Math.Max((rhythmDifficultStrains - 150) / 50, 0), 0.1);
 
             double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax);
             double starRating = rescale(combinedRating * 1.4);
