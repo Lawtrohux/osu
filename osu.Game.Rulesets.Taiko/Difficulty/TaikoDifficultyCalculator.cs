@@ -29,7 +29,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private const double colour_skill_multiplier = 0.375 * difficulty_multiplier;
         private const double stamina_skill_multiplier = 0.375 * difficulty_multiplier;
 
-        private double staminaLengthBonus;
+        private double LengthBonus;
 
         public override int Version => 20241007;
 
@@ -118,10 +118,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double monoStaminaFactor = staminaRating == 0 ? 1 : Math.Pow(monoStaminaRating / staminaRating, 5);
 
             double colourDifficultStrains = colour.CountTopWeightedStrains();
-            double readingDifficultStrains = reading.CountTopWeightedStrains();
+            double rhythmDifficultStrains = rhythm.CountTopWeightedStrains();
             double staminaDifficultStrains = stamina.CountTopWeightedStrains() * clockRate;
 
-            staminaLengthBonus = 1 + Math.Min(Math.Max((staminaDifficultStrains - 1500) / 7500, 0), 1.0);
+            LengthBonus = 1
+                          + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 7500, 0), 0.5)
+                          + Math.Min(Math.Max((readingDifficultStrains - 150) / 50, 0), 0.1);
 
             double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax);
             double starRating = rescale(combinedRating * 1.4);
@@ -148,7 +150,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 ColourDifficulty = colourRating,
                 StaminaDifficulty = staminaRating,
                 MonoStaminaFactor = monoStaminaFactor,
-                ReadingTopStrains = readingDifficultStrains,
+                RhythmTopStrains = rhythmDifficultStrains,
                 ColourTopStrains = colourDifficultStrains,
                 StaminaTopStrains = staminaDifficultStrains,
                 GreatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate,
@@ -177,10 +179,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             for (int i = 0; i < colourPeaks.Count; i++)
             {
-                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier;
+                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * LengthBonus;
                 double readingPeak = readingPeaks[i] * reading_skill_multiplier;
                 double colourPeak = colourPeaks[i] * colour_skill_multiplier;
-                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * staminaLengthBonus;
+                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * LengthBonus;
 
                 if (isRelax)
                 {
