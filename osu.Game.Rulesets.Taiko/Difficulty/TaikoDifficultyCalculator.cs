@@ -131,7 +131,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             // Converts are penalised outside the scope of difficulty calculation, as our assumptions surrounding standard play-styles becomes out-of-scope.
             if (beatmap.BeatmapInfo.Ruleset.OnlineID == 0)
             {
-                starRating *= 0.825;
+                starRating *= 0.7;
 
                 // For maps with relax, multiple inputs are more likely to be abused.
                 if (isRelax)
