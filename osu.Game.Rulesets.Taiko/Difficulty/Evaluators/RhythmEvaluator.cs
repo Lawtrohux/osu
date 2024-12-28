@@ -82,7 +82,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                     {
                         double ratio = intervals[i]!.Value / intervals[j]!.Value;
                         if (Math.Abs(1 - ratio) <= threshold) // If any two intervals are similar, apply a penalty.
-                            return 0.3;
+                            return 0.0;
                     }
                 }
 
