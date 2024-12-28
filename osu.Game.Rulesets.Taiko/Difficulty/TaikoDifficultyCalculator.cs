@@ -24,12 +24,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
         private const double difficulty_multiplier = 0.084375;
-        private const double rhythm_skill_multiplier = 1.24 * difficulty_multiplier;
+        private const double rhythm_skill_multiplier = 1.50 * difficulty_multiplier;
         private const double reading_skill_multiplier = 0.100 * difficulty_multiplier;
         private const double colour_skill_multiplier = 0.375 * difficulty_multiplier;
-        private const double stamina_skill_multiplier = 0.375 * difficulty_multiplier;
+        private const double stamina_skill_multiplier = 0.400 * difficulty_multiplier;
 
-        private double LengthBonus;
+        private double strainLengthBonus;
 
         public override int Version => 20241007;
 
@@ -121,9 +121,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double rhythmDifficultStrains = rhythm.CountTopWeightedStrains();
             double staminaDifficultStrains = stamina.CountTopWeightedStrains() * clockRate;
 
-            LengthBonus = 1
-                          + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 7500, 0), 0.07)
-                          + Math.Min(Math.Max((rhythmDifficultStrains - 150) / 50, 0), 0.075);
+            strainLengthBonus = 1
+                                + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 7500, 0), 0.07)
+                                + Math.Min(Math.Max((rhythmDifficultStrains - 140) / 30, 0), 0.075);
 
             double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax);
             double starRating = rescale(combinedRating * 1.4);
@@ -179,10 +179,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             for (int i = 0; i < colourPeaks.Count; i++)
             {
-                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * LengthBonus;
+                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * strainLengthBonus;
                 double readingPeak = readingPeaks[i] * reading_skill_multiplier;
                 double colourPeak = colourPeaks[i] * colour_skill_multiplier;
-                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * LengthBonus;
+                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * strainLengthBonus;
 
                 if (isRelax)
                 {
