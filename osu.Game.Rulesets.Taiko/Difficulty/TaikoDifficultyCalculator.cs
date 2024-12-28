@@ -27,7 +27,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private const double rhythm_skill_multiplier = 1.40 * difficulty_multiplier;
         private const double reading_skill_multiplier = 0.100 * difficulty_multiplier;
         private const double colour_skill_multiplier = 0.375 * difficulty_multiplier;
-        private const double stamina_skill_multiplier = 0.400 * difficulty_multiplier;
+        private const double stamina_skill_multiplier = 0.425 * difficulty_multiplier;
 
         private double strainLengthBonus;
 
@@ -122,8 +122,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double staminaDifficultStrains = stamina.CountTopWeightedStrains() * clockRate;
 
             strainLengthBonus = 1
-                + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 7500, 0), 0.07)
-                + Math.Min(Math.Max((rhythmDifficultStrains - 140) / 30, 0), 0.075) - Math.Min(Math.Max((55 - rhythmDifficultStrains) / 55, 0), 0.10);
+                + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 7500, 0), 0.07) + Math.Min(Math.Max((staminaRating - 8.0) / 1.0, 0), 0.05)
+                + Math.Min(Math.Max((rhythmDifficultStrains - 140) / 30, 0), 0.075) - Math.Min(Math.Max((55 - rhythmDifficultStrains) / 45, 0), 0.10);
 
             double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax);
             double starRating = rescale(combinedRating * 1.4);
