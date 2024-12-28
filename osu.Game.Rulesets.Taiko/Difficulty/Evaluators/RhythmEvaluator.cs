@@ -44,51 +44,66 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
             return difficulty / Math.Sqrt(8);
         }
 
-        /// <summary>
-        /// Determines if the changes in hit object intervals is consistent based on a given threshold.
-        /// </summary>
-        private static double repeatedIntervalPenalty(SameRhythmHitObjects sameRhythmHitObjects, double hitWindow, double threshold = 0.1)
+ /// <summary>
+/// Determines if the changes in hit object intervals are consistent based on a given threshold.
+/// </summary>
+private static double repeatedIntervalPenalty(SameRhythmHitObjects sameRhythmHitObjects, double hitWindow, double threshold = 0.1)
+{
+    double longIntervalPenalty = sameInterval(sameRhythmHitObjects, 3);
+
+    double shortIntervalPenalty = sameRhythmHitObjects.Children.Count < 6
+        ? sameInterval(sameRhythmHitObjects, 4)
+        : 1.0; // Returns a non-penalty if there are 6 or more notes within an interval.
+
+    // Scale penalties dynamically based on hit object duration relative to hitWindow.
+    double penaltyScaling = Math.Max(1 - sameRhythmHitObjects.Duration / (hitWindow * 2), 0.5);
+
+    return Math.Min(longIntervalPenalty, shortIntervalPenalty) * penaltyScaling;
+
+    double sameInterval(SameRhythmHitObjects startObject, int intervalCount)
+    {
+        List<double?> intervalRatios = new List<double?>();
+        List<double?> intervals = new List<double?>();
+        var currentObject = startObject;
+
+        for (int i = 0; i < intervalCount && currentObject != null; i++)
         {
-            double longIntervalPenalty = sameInterval(sameRhythmHitObjects, 3);
+            intervalRatios.Add(currentObject.HitObjectIntervalRatio);
+            intervals.Add(currentObject.HitObjectInterval);
+            currentObject = currentObject.Previous;
+        }
 
-            double shortIntervalPenalty = sameRhythmHitObjects.Children.Count < 6
-                ? sameInterval(sameRhythmHitObjects, 4)
-                : 1.0; // Returns a non-penalty if there are 6 or more notes within an interval.
+        intervalRatios.RemoveAll(interval => interval == null);
+        intervals.RemoveAll(interval => interval == null);
 
-            // Scale penalties dynamically based on hit object duration relative to hitWindow.
-            double penaltyScaling = Math.Max(1 - sameRhythmHitObjects.Duration / (hitWindow * 2), 0.5);
+        if (intervalRatios.Count < intervalCount || intervals.Count < intervalCount)
+            return 1.0; // No penalty if there aren't enough valid intervals.
 
-            return Math.Min(longIntervalPenalty, shortIntervalPenalty) * penaltyScaling;
-
-            double sameInterval(SameRhythmHitObjects startObject, int intervalCount)
+        // Check for penalties based on HitObjectIntervalRatio
+        for (int i = 0; i < intervalRatios.Count; i++)
+        {
+            for (int j = i + 1; j < intervalRatios.Count; j++)
             {
-                List<double?> intervals = new List<double?>();
-                var currentObject = startObject;
-
-                for (int i = 0; i < intervalCount && currentObject != null; i++)
-                {
-                    intervals.Add(currentObject.HitObjectIntervalRatio);
-                    currentObject = currentObject.Previous;
-                }
-
-                intervals.RemoveAll(interval => interval == null);
-
-                if (intervals.Count < intervalCount)
-                    return 1.0; // No penalty if there aren't enough valid intervals.
-
-                for (int i = 0; i < intervals.Count; i++)
-                {
-                    for (int j = i + 1; j < intervals.Count; j++)
-                    {
-                        double ratio = intervals[i]!.Value / intervals[j]!.Value;
-                        if (Math.Abs(1 - ratio) <= threshold) // If any two intervals are similar, apply a penalty.
-                            return 0.0;
-                    }
-                }
-
-                return 1.0; // No penalty if all intervals are different.
+                double ratio = intervalRatios[i]!.Value / intervalRatios[j]!.Value;
+                if (Math.Abs(1 - ratio) <= threshold) // If any two ratios are similar, apply a penalty.
+                    return 0.0;
             }
         }
+
+        // Check for penalties based on HitObjectInterval
+        for (int i = 0; i < intervals.Count; i++)
+        {
+            for (int j = i + 1; j < intervals.Count; j++)
+            {
+                double difference = Math.Abs(intervals[i]!.Value - intervals[j]!.Value);
+                if (difference <= hitWindow) // If any two intervals are close, apply a reduced penalty.
+                    return 0.5;
+            }
+        }
+
+        return 1.0; // No penalty if all intervals are sufficiently different.
+    }
+}
 
         private static double evaluateDifficultyOf(SameRhythmHitObjects sameRhythmHitObjects, double hitWindow)
         {
