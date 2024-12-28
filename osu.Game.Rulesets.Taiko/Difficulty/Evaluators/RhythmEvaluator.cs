@@ -67,7 +67,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
                 for (int i = 0; i < intervalCount && currentObject != null; i++)
                 {
-                    intervals.Add(currentObject.HitObjectInterval);
+                    intervals.Add(currentObject.HitObjectIntervalRatio);
                     currentObject = currentObject.Previous;
                 }
 
