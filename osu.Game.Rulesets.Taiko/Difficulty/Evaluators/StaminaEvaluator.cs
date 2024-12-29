@@ -57,6 +57,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
             }
 
             TaikoDifficultyHitObject taikoCurrent = (TaikoDifficultyHitObject)current;
+            TaikoDifficultyHitObject? previousObject = taikoCurrent.Previous(1) as TaikoDifficultyHitObject;
             TaikoDifficultyHitObject? previousMono = taikoCurrent.PreviousMono(availableFingersFor(taikoCurrent) - 1);
 
             // There is no previous hit object hit by the current finger
@@ -65,31 +66,26 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             int consecutiveCount = 1;
 
-            // Start traversal from the current object
-            TaikoDifficultyHitObject? previousObject = taikoCurrent.Previous(1) as TaikoDifficultyHitObject;
-
-            // Traverse backward to count consecutive notes with the same DeltaTime
             while (previousObject != null)
             {
-                // Check if the DeltaTime matches within a small tolerance
-                if (Math.Abs(previousObject.DeltaTime - taikoCurrent.DeltaTime) < 5) // Tolerance of 0.01ms
+                if (Math.Abs(previousObject.DeltaTime - taikoCurrent.DeltaTime) < 5.0) // Tolerance of 5ms for unsnaps
                 {
                     consecutiveCount++;
-                    previousObject = previousObject.Previous(1) as TaikoDifficultyHitObject; // Move to the next previous object
+                    previousObject = previousObject.Previous(1) as TaikoDifficultyHitObject;
                 }
                 else
                 {
-                    break; // Stop counting if DeltaTime differs significantly
+                    break;
                 }
             }
 
             double objectStrain = 0.5; // Add a base strain to all objects
             objectStrain += speedBonus(taikoCurrent.StartTime - previousMono.StartTime);
 
-            // Apply buff if the sequence exceeds 500 consecutive notes
-            if (consecutiveCount >= 750)
+            // Consecutive notes exceeding 100 are buffed slowly, capped at 800 objects.
+            if (consecutiveCount >= 100)
             {
-                objectStrain += (double)consecutiveCount / 750; // Example scaling using a fractional result
+                objectStrain += 0.00025 * Math.Min(consecutiveCount, 800);
             }
 
             return objectStrain;
