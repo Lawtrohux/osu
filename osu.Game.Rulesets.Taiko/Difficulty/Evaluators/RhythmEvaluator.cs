@@ -31,20 +31,22 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             for (int i = 1; i <= terms; ++i)
             {
-                difficulty += termPenalty(ratio, i, 2, 1);
+                difficulty += termPenalty(ratio, i, 2, 0.7);
             }
 
-            difficulty += terms / (1 + ratio);
+            // Reduce the impact of the terms/ratio component
+            difficulty += (terms / (1 + ratio)) * 0.8;
 
             // Give bonus to near-1 ratios
-            difficulty += DifficultyCalculationUtils.BellCurve(ratio, 1, 0.7);
+            difficulty += DifficultyCalculationUtils.BellCurve(ratio, 1, 0.9);
 
             // Penalize ratios that are VERY near 1
-            difficulty -= DifficultyCalculationUtils.BellCurve(ratio, 1, 0.5);
+            difficulty -= DifficultyCalculationUtils.BellCurve(ratio, 1, 0.3);
 
             difficulty = Math.Max(difficulty, 0);
 
-            return difficulty / Math.Sqrt(8);
+            // Scale down the final difficulty more aggressively
+            return difficulty / (Math.Sqrt(8) * 2);
         }
 
         /// <summary>
