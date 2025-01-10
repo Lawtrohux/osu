@@ -39,10 +39,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
             difficulty = Math.Max(difficulty, 0);
             difficulty /= Math.Sqrt(8);
 
-            // Penalize ratios that are VERY near 1
-            difficulty -= DifficultyCalculationUtils.BellCurve(ratio, 0.3
-                , 0.01);
-
             return difficulty;
         }
 
@@ -113,8 +109,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                 }
             }
 
-            intervalDifficulty *= repeatedIntervalPenalty(sameRhythmHitObjects, hitWindow);
-
             // Penalise patterns that can be hit within a single hit window.
             intervalDifficulty *= DifficultyCalculationUtils.Logistic(
                 sameRhythmHitObjects.Duration / hitWindow,
@@ -140,15 +134,18 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             double sameRhythm = 0;
             double samePattern = 0;
+            double intervalPenalty = 0;
 
             if (rhythm.SameRhythmHitObjects?.FirstHitObject == hitObject) // Difficulty for SameRhythmHitObjects
-                sameRhythm = 5.5 * evaluateDifficultyOf(rhythm.SameRhythmHitObjects, hitWindow);
+            {
+                sameRhythm = 8.0 * evaluateDifficultyOf(rhythm.SameRhythmHitObjects, hitWindow);
+                intervalPenalty = repeatedIntervalPenalty(rhythm.SameRhythmHitObjects, hitWindow);
+            }
 
             if (rhythm.SamePatterns?.FirstHitObject == hitObject) // Difficulty for SamePatterns
-                samePattern += 1.25 * evaluateDifficultyOf(rhythm.SamePatterns);
+                samePattern += 1.0 * evaluateDifficultyOf(rhythm.SamePatterns);
 
-            difficulty += Math.Max(sameRhythm, samePattern);
-
+            difficulty += Math.Max(sameRhythm, samePattern) * intervalPenalty;
             return difficulty;
         }
     }
