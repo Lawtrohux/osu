@@ -80,7 +80,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                     {
                         double ratio = intervals[i]!.Value / intervals[j]!.Value;
                         if (Math.Abs(1 - ratio) <= threshold) // If any two intervals are similar, apply a penalty.
-                            return 0.50;
+                            return 0.99;
                     }
                 }
 
@@ -92,6 +92,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
         {
             double intervalDifficulty = ratioDifficulty(sameRhythmHitObjects.HitObjectIntervalRatio);
             double? previousInterval = sameRhythmHitObjects.Previous?.HitObjectInterval;
+
+            intervalDifficulty *= repeatedIntervalPenalty(sameRhythmHitObjects, hitWindow);
 
             // If a previous interval exists and there are multiple hit objects in the sequence:
             if (previousInterval != null && sameRhythmHitObjects.Children.Count > 1)
@@ -107,6 +109,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                         multiplier: 1.5,
                         maxValue: 1);
                 }
+
+                Console.WriteLine(durationDifference);
             }
 
             // Penalise patterns that can be hit within a single hit window.
@@ -138,7 +142,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             if (rhythm.SameRhythmHitObjects?.FirstHitObject == hitObject) // Difficulty for SameRhythmHitObjects
             {
-                sameRhythm = 8.0 * evaluateDifficultyOf(rhythm.SameRhythmHitObjects, hitWindow);
+                sameRhythm += 8.0 * evaluateDifficultyOf(rhythm.SameRhythmHitObjects, hitWindow);
                 intervalPenalty = repeatedIntervalPenalty(rhythm.SameRhythmHitObjects, hitWindow);
             }
 
@@ -146,6 +150,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                 samePattern += 1.0 * evaluateDifficultyOf(rhythm.SamePatterns);
 
             difficulty += Math.Max(sameRhythm, samePattern) * intervalPenalty;
+
             return difficulty;
         }
     }

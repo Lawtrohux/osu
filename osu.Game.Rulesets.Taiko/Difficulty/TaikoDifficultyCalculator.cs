@@ -122,7 +122,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double rhythmDifficultStrains = rhythm.CountTopWeightedStrains();
             double staminaDifficultStrains = stamina.CountTopWeightedStrains() * clockRate;
 
+            // As we don't have pattern integration in osu!taiko, we apply the other two skills relative to rhythm.
             patternScale = Math.Pow(staminaRating * colourRating, 0.10);
+
+            if (rhythmRating > staminaRating * colourRating - 1)
+                patternScale *= 0.5;
 
             strainLengthBonus = 1
                                 + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 5000, 0), 0.15)
