@@ -109,8 +109,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                         multiplier: 1.5,
                         maxValue: 1);
                 }
-
-                Console.WriteLine(durationDifference);
             }
 
             // Penalise patterns that can be hit within a single hit window.
