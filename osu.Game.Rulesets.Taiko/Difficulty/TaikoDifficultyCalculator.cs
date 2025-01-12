@@ -125,7 +125,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             // As we don't have pattern integration in osu!taiko, we apply the other two skills relative to rhythm.
             patternScale = Math.Pow(staminaRating * colourRating, 0.10);
 
-            if (rhythmRating > staminaRating * colourRating - 1)
+            if (rhythmRating > staminaRating * colourRating - 1) // Ensure Rhythm never exceeds the combined difficulty of the other two skills.
                 patternScale *= 0.5;
 
             strainLengthBonus = 1
