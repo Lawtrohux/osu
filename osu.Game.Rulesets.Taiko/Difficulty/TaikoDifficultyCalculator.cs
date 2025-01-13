@@ -30,7 +30,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private const double stamina_skill_multiplier = 0.445 * difficulty_multiplier;
 
         private double strainLengthBonus;
-        private double patternScale;
+        private double patternMultiplier;
 
         public override int Version => 20241007;
 
@@ -123,10 +123,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double staminaDifficultStrains = stamina.CountTopWeightedStrains() * clockRate;
 
             // As we don't have pattern integration in osu!taiko, we apply the other two skills relative to rhythm.
-            patternScale = Math.Pow(staminaRating * colourRating, 0.10);
+            patternMultiplier = Math.Pow(staminaRating * colourRating, 0.10);
+            double rhythmFactor = Math.Pow(rhythmRating, 0.175);
 
-            if (rhythmRating > staminaRating * colourRating - 1) // Ensure Rhythm never exceeds the combined difficulty of the other two skills.
-                patternScale *= 0.5;
+            // If rhythm exceeds the patternMultiplier of the other two skills, we apply a logistical nerf.
+            if (rhythmFactor > patternMultiplier)
+            {
+                patternMultiplier *= DifficultyCalculationUtils.Logistic(Math.Pow(rhythmRating, 0.20) - patternMultiplier, 1, 1);
+            }
 
             strainLengthBonus = 1
                                 + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 5000, 0), 0.15)
@@ -186,7 +190,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             for (int i = 0; i < colourPeaks.Count; i++)
             {
-                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * strainLengthBonus * patternScale;
+                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * strainLengthBonus * patternMultiplier;
                 double readingPeak = readingPeaks[i] * reading_skill_multiplier;
                 double colourPeak = colourPeaks[i] * colour_skill_multiplier;
                 double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * strainLengthBonus;
