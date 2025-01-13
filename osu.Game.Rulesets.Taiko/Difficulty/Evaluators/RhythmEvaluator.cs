@@ -23,11 +23,20 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
         }
 
         /// <summary>
+        /// To prevent against infinite ratio values where maps breach regular mapping conditions, we validate the ratio.
+        /// </summary>
+        private static double validateRatio(double ratio)
+        {
+            return double.IsInfinity(ratio) || double.IsNaN(ratio) ? 0 : ratio;
+        }
+
+        /// <summary>
         /// Calculates the difficulty of a given ratio using a combination of periodic penalties and bonuses.
         /// </summary>
         private static double ratioDifficulty(double ratio, int terms = 8)
         {
             double difficulty = 0;
+            ratio = validateRatio(ratio);
 
             for (int i = 1; i <= terms; ++i)
             {
