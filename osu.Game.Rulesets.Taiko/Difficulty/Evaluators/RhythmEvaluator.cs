@@ -80,7 +80,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                     {
                         double ratio = intervals[i]!.Value / intervals[j]!.Value;
                         if (Math.Abs(1 - ratio) <= threshold) // If any two intervals are similar, apply a penalty.
-                            return 0.99;
+                            return 0.80;
                     }
                 }
 
@@ -140,12 +140,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             if (rhythm.SameRhythmHitObjects?.FirstHitObject == hitObject) // Difficulty for SameRhythmHitObjects
             {
-                sameRhythm += 8.0 * evaluateDifficultyOf(rhythm.SameRhythmHitObjects, hitWindow);
+                sameRhythm += 11.0 * evaluateDifficultyOf(rhythm.SameRhythmHitObjects, hitWindow);
                 intervalPenalty = repeatedIntervalPenalty(rhythm.SameRhythmHitObjects, hitWindow);
             }
 
             if (rhythm.SamePatterns?.FirstHitObject == hitObject) // Difficulty for SamePatterns
-                samePattern += 1.0 * evaluateDifficultyOf(rhythm.SamePatterns);
+                samePattern += 1.10 * evaluateDifficultyOf(rhythm.SamePatterns);
 
             difficulty += Math.Max(sameRhythm, samePattern) * intervalPenalty;
 
