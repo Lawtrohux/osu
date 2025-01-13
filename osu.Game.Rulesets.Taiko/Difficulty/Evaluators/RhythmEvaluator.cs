@@ -36,6 +36,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             difficulty += terms / (1 + ratio);
 
+            // Give bonus to near-1 ratios
+            difficulty += DifficultyCalculationUtils.BellCurve(ratio, 1, 0.5);
+
+            // Penalize ratios that are VERY near 1
+            difficulty -= DifficultyCalculationUtils.BellCurve(ratio, 1, 0.3);
+
             difficulty = Math.Max(difficulty, 0);
             difficulty /= Math.Sqrt(8);
 
@@ -140,7 +146,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             if (rhythm.SameRhythmHitObjects?.FirstHitObject == hitObject) // Difficulty for SameRhythmHitObjects
             {
-                sameRhythm += 11.0 * evaluateDifficultyOf(rhythm.SameRhythmHitObjects, hitWindow);
+                sameRhythm += 10.0 * evaluateDifficultyOf(rhythm.SameRhythmHitObjects, hitWindow);
                 intervalPenalty = repeatedIntervalPenalty(rhythm.SameRhythmHitObjects, hitWindow);
             }
 
