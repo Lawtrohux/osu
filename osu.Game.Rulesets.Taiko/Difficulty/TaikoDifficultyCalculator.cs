@@ -129,8 +129,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             // If rhythm exceeds the patternMultiplier of the other two skills, we apply a logistical nerf.
             if (rhythmRating > staminaRating)
             {
-                // Apply a smooth nerf when rhythmRating is less than staminaRating
-                rhythmPenalty *= DifficultyCalculationUtils.Logistic(rhythmRating - staminaRating, 0, 1);
+                // Applied only when rhythmRating is less than staminaRating, which functionally it should never be.
+                rhythmPenalty *= DifficultyCalculationUtils.Logistic(rhythmRating - staminaRating, 1, 4);
             }
 
             strainLengthBonus = 1
