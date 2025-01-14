@@ -31,7 +31,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private double strainLengthBonus;
         private double patternMultiplier;
-        private double rhythmPenalty = 1;
 
         public override int Version => 20241007;
 
@@ -126,13 +125,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             // As we don't have pattern integration in osu!taiko, we apply the other two skills relative to rhythm.
             patternMultiplier = Math.Pow(staminaRating * colourRating, 0.10);
 
-            // If rhythm exceeds the patternMultiplier of the other two skills, we apply a logistical nerf.
-            if (rhythmRating > staminaRating)
-            {
-                // Applied only when rhythmRating is less than staminaRating, which functionally it should never be.
-                rhythmPenalty *= DifficultyCalculationUtils.Logistic(rhythmRating - staminaRating, 1, 4);
-            }
-
             strainLengthBonus = 1
                                 + Math.Min(Math.Max((staminaDifficultStrains - 1350) / 5000, 0), 0.15)
                                 + Math.Min(Math.Max((staminaRating - 7.0) / 1.0, 0), 0.05);
@@ -191,7 +183,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             for (int i = 0; i < colourPeaks.Count; i++)
             {
-                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * patternMultiplier * rhythmPenalty;
+                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * patternMultiplier;
                 double readingPeak = readingPeaks[i] * reading_skill_multiplier;
                 double colourPeak = colourPeaks[i] * colour_skill_multiplier;
                 double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * strainLengthBonus;
