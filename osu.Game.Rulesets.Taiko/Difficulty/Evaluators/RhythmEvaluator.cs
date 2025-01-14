@@ -69,7 +69,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                 : 1.0; // Returns a non-penalty if there are 6 or more notes within an interval.
 
             // Scale penalties dynamically based on hit object duration relative to hitWindow.
-            double penaltyScaling = Math.Max(1 - sameRhythmHitObjects.Duration / (hitWindow * 2), 0.5);
+            double penaltyScaling = Math.Max(1 - (sameRhythmHitObjects.Duration * 2) / hitWindow, 0.5);
 
             return Math.Min(longIntervalPenalty, shortIntervalPenalty) * penaltyScaling;
 
@@ -160,7 +160,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
             }
 
             if (rhythm.SamePatterns?.FirstHitObject == hitObject) // Difficulty for SamePatterns
-                samePattern += 1.10 * evaluateDifficultyOf(rhythm.SamePatterns);
+                samePattern += 1.15 * evaluateDifficultyOf(rhythm.SamePatterns);
 
             difficulty += Math.Max(sameRhythm, samePattern) * intervalPenalty;
 
