@@ -47,7 +47,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
             double monolengthBonus = 1 + Math.Min(Math.Max((index - 5) / 50.0, 0), 0.30);
 
             if (singleColourStamina)
-                return (currentStrain) / (1 + Math.Exp(-(index - 10) / 2.0));
+                return currentStrain / (1 + Math.Exp(-(index - 10) / 2.0));
 
             return currentStrain * monolengthBonus;
         }
