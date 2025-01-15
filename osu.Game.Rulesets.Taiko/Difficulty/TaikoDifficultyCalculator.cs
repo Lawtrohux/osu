@@ -31,7 +31,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         private double strainLengthBonus;
         private double patternMultiplier;
-        private double convertPenalty;
+
+        private bool isConvert;
 
         public override int Version => 20241007;
 
@@ -45,13 +46,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             HitWindows hitWindows = new HitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
 
+            isConvert = beatmap.BeatmapInfo.Ruleset.OnlineID == 0;
+
             return new Skill[]
             {
                 new Rhythm(mods, hitWindows.WindowFor(HitResult.Great) / clockRate),
                 new Reading(mods),
                 new Colour(mods),
-                new Stamina(mods, false),
-                new Stamina(mods, true)
+                new Stamina(mods, false, isConvert),
+                new Stamina(mods, true, isConvert)
             };
         }
 
@@ -105,7 +108,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 return new TaikoDifficultyAttributes { Mods = mods };
 
             bool isRelax = mods.Any(h => h is TaikoModRelax);
-            bool isConvert = beatmap.BeatmapInfo.Ruleset.OnlineID == 0;
 
             Rhythm rhythm = (Rhythm)skills.First(x => x is Rhythm);
             Reading reading = (Reading)skills.First(x => x is Reading);
@@ -133,16 +135,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax, isConvert);
             double starRating = rescale(combinedRating * 1.4);
-
-            // Converts are penalised outside the scope of difficulty calculation, as our assumptions surrounding standard play-styles becomes out-of-scope.
-            if (isConvert)
-            {
-                starRating *= 0.875;
-
-                // For maps with relax, multiple inputs are more likely to be abused.
-                if (isRelax)
-                    starRating *= 0.60;
-            }
 
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
@@ -187,18 +179,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             {
                 double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * patternMultiplier;
                 double readingPeak = readingPeaks[i] * reading_skill_multiplier;
-                double colourPeak = colourPeaks[i] * colour_skill_multiplier;
+                double colourPeak = isRelax ? 0 : colourPeaks[i] * colour_skill_multiplier;
                 double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * strainLengthBonus;
-
-                if (isRelax)
-                {
-                    colourPeak = 0; // There is no colour difficulty in relax.
-                }
-
-                if (isConvert || isRelax)
-                {
-                    staminaPeak /= 1.5;
-                }
+                staminaPeak /= isConvert || isRelax ? 1.5 : 1.0;
 
                 double peak = DifficultyCalculationUtils.Norm(2, DifficultyCalculationUtils.Norm(1.5, colourPeak, staminaPeak), rhythmPeak, readingPeak);
 
