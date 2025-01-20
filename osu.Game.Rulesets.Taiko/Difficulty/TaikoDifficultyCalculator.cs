@@ -1,4 +1,4 @@
-﻿﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
+﻿// Copyright (c) ppy Pty Ltd <contact@ppy.sh>. Licensed under the MIT Licence.
 // See the LICENCE file in the repository root for full licence text.
 
 using System;
@@ -106,11 +106,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             bool isRelax = mods.Any(h => h is TaikoModRelax);
 
-            Rhythm rhythm = (Rhythm)skills.First(x => x is Rhythm);
-            Reading reading = (Reading)skills.First(x => x is Reading);
-            Colour colour = (Colour)skills.First(x => x is Colour);
-            Stamina stamina = (Stamina)skills.First(x => x is Stamina);
-            Stamina singleColourStamina = (Stamina)skills.Last(x => x is Stamina);
+            var rhythm = skills.OfType<Rhythm>().Single();
+            var reading = skills.OfType<Reading>().Single();
+            var colour = skills.OfType<Colour>().Single();
+            var stamina = skills.OfType<Stamina>().Single(s => !s.SingleColourStamina);
+            var singleColourStamina = skills.OfType<Stamina>().Single(s => s.SingleColourStamina);
 
             double rhythmRating = rhythm.DifficultyValue() * rhythm_skill_multiplier;
             double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
