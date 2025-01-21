@@ -4,10 +4,12 @@
 namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm
 {
     /// <summary>
-    /// The interface for hitobjects that provide an interval value.
+    /// Represents a hitobject that provides an interval value.
+    /// The interval refers to the rhythmic timing the current hit object is placed on.
     /// </summary>
     public interface IHasInterval
     {
+        // Gets the rhythmic interval associated with this object.
         double Interval { get; }
     }
 }
