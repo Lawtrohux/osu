@@ -3,6 +3,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using osu.Game.Beatmaps.ControlPoints;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Objects;
 using osu.Game.Rulesets.Taiko.Objects;
@@ -120,5 +121,36 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         public TaikoDifficultyHitObject? PreviousNote(int backwardsIndex) => noteDifficultyHitObjects.ElementAtOrDefault(NoteIndex - (backwardsIndex + 1));
 
         public TaikoDifficultyHitObject? NextNote(int forwardsIndex) => noteDifficultyHitObjects.ElementAtOrDefault(NoteIndex + (forwardsIndex + 1));
+
+        /// <summary>
+        /// Calculates and sets the effective BPM and slider velocity for each note object, considering clock rate and scroll speed.
+        /// </summary>
+        public void ProcessEffectiveBPM(ControlPointInfo controlPointInfo, double clockRate)
+        {
+            foreach (var currentNoteObject in noteDifficultyHitObjects)
+            {
+                double startTime = currentNoteObject.StartTime * clockRate;
+
+                // Retrieve the timing point at the note's start time
+                TimingControlPoint currentControlPoint = controlPointInfo.TimingPointAt(startTime);
+
+                // Calculate the slider velocity at the note's start time.
+                double currentSliderVelocity = calculateSliderVelocity(controlPointInfo, startTime, clockRate);
+                currentNoteObject.CurrentSliderVelocity = currentSliderVelocity;
+
+                currentNoteObject.EffectiveBPM = currentControlPoint.BPM * currentSliderVelocity;
+            }
+        }
+
+        /// <summary>
+        /// Calculates the slider velocity based on control point info and clock rate.
+        /// </summary>
+        private double calculateSliderVelocity(ControlPointInfo controlPointInfo, double startTime, double clockRate)
+        {
+            var activeEffectControlPoint = controlPointInfo.EffectPointAt(startTime);
+            return globalSliderVelocity * (activeEffectControlPoint.ScrollSpeed) * clockRate;
+        }
+
+        private readonly double globalSliderVelocity;
     }
 }
