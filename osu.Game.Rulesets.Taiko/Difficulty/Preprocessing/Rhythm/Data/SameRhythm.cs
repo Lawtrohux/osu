@@ -19,7 +19,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
         /// Determines if the intervals between two child objects are within a specified margin of error,
         /// indicating that the intervals are effectively "flat" or consistent.
         /// </summary>
-        private bool isFlat(ChildType current, ChildType previous, double marginOfError)
+        private bool isSameRhythm(ChildType current, ChildType previous, double marginOfError)
         {
             return Math.Abs(current.Interval - previous.Interval) <= marginOfError;
         }
@@ -46,13 +46,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
             for (; i < data.Count - 1; i++)
             {
                 // An interval change occured, add the current data if the next interval is larger.
-                if (!isFlat(data[i], data[i + 1], marginOfError))
+                if (!isSameRhythm(data[i], data[i + 1], marginOfError))
                 {
-                    if (data[i + 1].Interval > data[i].Interval + marginOfError)
-                    {
-                        children.Add(data[i]);
-                        i++;
-                    }
+                    if (!(data[i + 1].Interval > data[i].Interval + marginOfError)) return;
+
+                    children.Add(data[i]);
+                    i++;
 
                     return;
                 }
@@ -63,11 +62,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
 
             // Check if the last two objects in the data form a "flat" rhythm pattern within the specified margin of error.
             // If true, add the current object to the group and increment the index to process the next object.
-            if (data.Count > 2 && isFlat(data[^1], data[^2], marginOfError))
-            {
-                children.Add(data[i]);
-                i++;
-            }
+            if (data.Count <= 2 || !isSameRhythm(data[^1], data[^2], marginOfError)) return;
+
+            children.Add(data[i]);
+            i++;
         }
     }
 }

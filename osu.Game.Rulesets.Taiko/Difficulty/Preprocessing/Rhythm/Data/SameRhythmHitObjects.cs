@@ -2,7 +2,6 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System.Collections.Generic;
-using osu.Game.Rulesets.Difficulty.Preprocessing;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
 {
@@ -11,84 +10,100 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
     /// </summary>
     public class SameRhythmHitObjects : SameRhythm<TaikoDifficultyHitObject>, IHasInterval
     {
+        /// <summary>
+        /// The first hit object in this group.
+        /// </summary>
         public TaikoDifficultyHitObject FirstHitObject => Children[0];
 
-        public SameRhythmHitObjects? Previous;
-
         /// <summary>
-        /// <see cref="DifficultyHitObject.StartTime"/> of the first hit object.
+        /// The previous group of <see cref="SameRhythmHitObjects"/>, if available.
         /// </summary>
-        public double StartTime => Children[0].StartTime;
+        public SameRhythmHitObjects? Previous { get; }
 
         /// <summary>
-        /// The interval between the first and final hit object within this group.
+        /// The start time of the first hit object in this group.
         /// </summary>
-        public double Duration => Children[^1].StartTime - Children[0].StartTime;
+        public double StartTime => FirstHitObject.StartTime;
 
         /// <summary>
-        /// The interval in ms of each hit object in this <see cref="SameRhythmHitObjects"/>. This is only defined if there is
-        /// more than two hit objects in this <see cref="SameRhythmHitObjects"/>.
+        /// The duration between the first and last hit objects in this group.
         /// </summary>
-        public double? HitObjectInterval;
+        public double Duration => Children[^1].StartTime - FirstHitObject.StartTime;
 
         /// <summary>
-        /// The ratio of <see cref="HitObjectInterval"/> between this and the previous <see cref="SameRhythmHitObjects"/>. In the
-        /// case where one or both of the <see cref="HitObjectInterval"/> is undefined, this will have a value of 1.
+        /// The average interval between hit objects in this group, if applicable.
         /// </summary>
-        public double HitObjectIntervalRatio = 1;
+        public double? HitObjectInterval { get; private set; }
 
         /// <summary>
-        /// The interval between the <see cref="StartTime"/> of this and the previous <see cref="SameRhythmHitObjects"/>.
+        /// The ratio of <see cref="HitObjectInterval"/> between this and the previous group.
+        /// Defaults to 1 if undefined.
+        /// </summary>
+        public double HitObjectIntervalRatio { get; private set; } = 1;
+
+        /// <summary>
+        /// The interval between the start time of this group and the previous group.
+        /// Defaults to positive infinity if no previous group exists.
         /// </summary>
         public double Interval { get; private set; } = double.PositiveInfinity;
 
-        public SameRhythmHitObjects(SameRhythmHitObjects? previous, List<TaikoDifficultyHitObject> data, ref int i)
-            : base(data, ref i, 5)
+        public SameRhythmHitObjects(SameRhythmHitObjects? previous, List<TaikoDifficultyHitObject> data, ref int index)
+            : base(data, ref index, 5)
         {
             Previous = previous;
 
-            foreach (var hitObject in Children)
-            {
-                hitObject.Rhythm.SameRhythmHitObjects = this;
-
-                // Pass the HitObjectInterval to each child.
-                hitObject.HitObjectInterval = HitObjectInterval;
-            }
-
+            assignToChildren();
             calculateIntervals();
         }
 
+        /// <summary>
+        /// Groups a list of <see cref="TaikoDifficultyHitObject"/>s into <see cref="SameRhythmHitObjects"/>.
+        /// </summary>
+        /// <param name="data">The list of hit objects to group.</param>
         public static List<SameRhythmHitObjects> GroupHitObjects(List<TaikoDifficultyHitObject> data)
         {
-            List<SameRhythmHitObjects> flatPatterns = new List<SameRhythmHitObjects>();
+            var groups = new List<SameRhythmHitObjects>();
 
-            // Index does not need to be incremented, as it is handled within SameRhythm's constructor.
             for (int i = 0; i < data.Count;)
             {
-                SameRhythmHitObjects? previous = flatPatterns.Count > 0 ? flatPatterns[^1] : null;
-                flatPatterns.Add(new SameRhythmHitObjects(previous, data, ref i));
+                var previous = groups.Count > 0 ? groups[^1] : null;
+                groups.Add(new SameRhythmHitObjects(previous, data, ref i));
             }
 
-            return flatPatterns;
+            return groups;
         }
 
+        /// <summary>
+        /// Assigns this group to its children and propagates the calculated hit object interval.
+        /// </summary>
+        private void assignToChildren()
+        {
+            foreach (var hitObject in Children)
+            {
+                hitObject.Rhythm.SameRhythmHitObjects = this;
+                hitObject.HitObjectInterval = HitObjectInterval;
+            }
+        }
+
+        /// <summary>
+        /// Calculates the intervals for this group, including the average hit object interval
+        /// and its ratio with the previous group's interval.
+        /// </summary>
         private void calculateIntervals()
         {
-            // Calculate the average interval between hitobjects, or null if there are fewer than two.
-            HitObjectInterval = Children.Count < 2 ? null : (Children[^1].StartTime - Children[0].StartTime) / (Children.Count - 1);
+            // Calculate the average interval between hit objects, or null if fewer than two exist.
+            HitObjectInterval = Children.Count > 1
+                ? (Children[^1].StartTime - FirstHitObject.StartTime) / (Children.Count - 1)
+                : null;
 
-            // If both the current and previous intervals are available, calculate the ratio.
+            // Calculate the interval ratio with the previous group, if applicable.
             if (Previous?.HitObjectInterval != null && HitObjectInterval != null)
             {
                 HitObjectIntervalRatio = HitObjectInterval.Value / Previous.HitObjectInterval.Value;
             }
 
-            if (Previous == null)
-            {
-                return;
-            }
-
-            Interval = StartTime - Previous.StartTime;
+            // Calculate the interval to the previous group.
+            Interval = Previous != null ? StartTime - Previous.StartTime : double.PositiveInfinity;
         }
     }
 }

@@ -11,43 +11,60 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
     /// </summary>
     public class SamePatterns : SameRhythm<SameRhythmHitObjects>
     {
-        public SamePatterns? Previous { get; private set; }
+        /// <summary>
+        /// The previous pattern in the sequence.
+        /// </summary>
+        public SamePatterns? Previous { get; }
 
         /// <summary>
-        /// The <see cref="SameRhythmHitObjects.Interval"/> between children <see cref="SameRhythmHitObjects"/> within this group.
-        /// If there is only one child, this will have the value of the first child's <see cref="SameRhythmHitObjects.Interval"/>.
+        /// The interval between children <see cref="SameRhythmHitObjects"/> within this group.
+        /// Defaults to the first child's interval if there is only one child.
         /// </summary>
         public double ChildrenInterval => Children.Count > 1 ? Children[1].Interval : Children[0].Interval;
 
         /// <summary>
-        /// The ratio of <see cref="ChildrenInterval"/> between this and the previous <see cref="SamePatterns"/>. In the
-        /// case where there is no previous <see cref="SamePatterns"/>, this will have a value of 1.
+        /// The ratio of <see cref="ChildrenInterval"/> between this and the previous pattern.
+        /// Returns 1 if there is no previous pattern.
         /// </summary>
-        public double IntervalRatio => ChildrenInterval / Previous?.ChildrenInterval ?? 1.0d;
+        public double IntervalRatio => Previous != null ? ChildrenInterval / Previous.ChildrenInterval : 1.0;
 
+        /// <summary>
+        /// The first hit object in this pattern.
+        /// </summary>
         public TaikoDifficultyHitObject FirstHitObject => Children[0].FirstHitObject;
 
+        /// <summary>
+        /// All hit objects across all rhythm groups in this pattern.
+        /// </summary>
         public IEnumerable<TaikoDifficultyHitObject> AllHitObjects => Children.SelectMany(child => child.Children);
 
-        private SamePatterns(SamePatterns? previous, List<SameRhythmHitObjects> data, ref int i)
-            : base(data, ref i, 5)
+        /// <summary>
+        /// Constructs a new <see cref="SamePatterns"/> group.
+        /// </summary>
+        /// <param name="previous">The previous pattern in the sequence.</param>
+        /// <param name="data">The data to group.</param>
+        /// <param name="index">The current index in the data.</param>
+        private SamePatterns(SamePatterns? previous, List<SameRhythmHitObjects> data, ref int index)
+            : base(data, ref index, 5)
         {
             Previous = previous;
 
-            foreach (TaikoDifficultyHitObject hitObject in AllHitObjects)
-            {
+            foreach (var hitObject in AllHitObjects)
                 hitObject.Rhythm.SamePatterns = this;
-            }
         }
 
+        /// <summary>
+        /// Groups the provided rhythm data into patterns.
+        /// </summary>
+        /// <param name="data">The rhythm data to group.</param>
         public static void GroupPatterns(List<SameRhythmHitObjects> data)
         {
-            List<SamePatterns> samePatterns = new List<SamePatterns>();
+            var samePatterns = new List<SamePatterns>();
 
-            // Index does not need to be incremented, as it is handled within the SameRhythm constructor.
+            // Index incrementation is handled by the base constructor.
             for (int i = 0; i < data.Count;)
             {
-                SamePatterns? previous = samePatterns.Count > 0 ? samePatterns[^1] : null;
+                var previous = samePatterns.LastOrDefault();
                 samePatterns.Add(new SamePatterns(previous, data, ref i));
             }
         }
