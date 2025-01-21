@@ -40,6 +40,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         {
         }
 
+        /// <summary>
+        /// Creates the set of skills used to calculate difficulty.
+        /// </summary>
         protected override Skill[] CreateSkills(IBeatmap beatmap, Mod[] mods, double clockRate)
         {
             HitWindows hitWindows = new TaikoHitWindows();
@@ -57,6 +60,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             };
         }
 
+        /// <summary>
+        /// The set of mods that adjust difficulty in osu!taiko.
+        /// </summary>
         protected override Mod[] DifficultyAdjustmentMods => new Mod[]
         {
             new TaikoModDoubleTime(),
@@ -65,6 +71,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             new TaikoModHardRock(),
         };
 
+        /// <summary>
+        /// Creates the difficulty hit objects for a beatmap.
+        /// </summary>
         protected override IEnumerable<DifficultyHitObject> CreateDifficultyHitObjects(IBeatmap beatmap, double clockRate)
         {
             var difficultyHitObjects = new List<DifficultyHitObject>();
@@ -73,6 +82,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             var noteObjects = new List<TaikoDifficultyHitObject>();
             var bpmLoader = new EffectiveBPMPreprocessor(beatmap, noteObjects);
 
+            // Generate TaikoDifficultyHitObjects from the beatmap's hit objects.
             for (int i = 2; i < beatmap.HitObjects.Count; i++)
             {
                 difficultyHitObjects.Add(new TaikoDifficultyHitObject(
@@ -97,6 +107,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             return difficultyHitObjects;
         }
 
+        /// <summary>
+        /// Creates the difficulty attributes for the beatmap.
+        /// </summary>
         protected override DifficultyAttributes CreateDifficultyAttributes(IBeatmap beatmap, Mod[] mods, Skill[] skills, double clockRate)
         {
             if (beatmap.HitObjects.Count == 0)
@@ -121,6 +134,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double rhythmDifficultStrains = rhythm.CountTopWeightedStrains();
             double staminaDifficultStrains = stamina.CountTopWeightedStrains();
 
+            // As we don't have pattern integration in osu!taiko, we apply the other two skills relative to rhythm.
             patternMultiplier = Math.Pow(staminaRating * colourRating, 0.10);
             strainLengthBonus = 1
                                 + Math.Min(Math.Max((staminaDifficultStrains - 1000) / 3700, 0), 0.15)
@@ -144,6 +158,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
                 double peak = DifficultyCalculationUtils.Norm(2, DifficultyCalculationUtils.Norm(1.5, colourPeak, staminaPeak), rhythmPeak, readingPeak);
 
+                // Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort (e.g. /b/2351871).
+                // These sections will not contribute to the difficulty.
                 if (peak > 0)
                     peaks.Add(peak);
             }
@@ -180,6 +196,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             };
         }
 
+        /// <summary>
+        /// Applies a final re-scaling of the star rating.
+        /// </summary>
+        /// <param name="sr">The raw star rating value before re-scaling.</param>
         private double rescale(double sr) => sr < 0 ? sr : 10.43 * Math.Log(sr / 8 + 1);
     }
 }
