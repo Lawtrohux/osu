@@ -77,16 +77,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
         /// <param name="rimHitObjects">The list of rim (kat) <see cref="DifficultyHitObject"/>s in the current beatmap.</param>
         /// <param name="noteObjects">The list of <see cref="DifficultyHitObject"/>s that is a hit (i.e. not a drumroll or swell) in the current beatmap.</param>
         /// <param name="index">The position of this <see cref="DifficultyHitObject"/> in the <paramref name="objects"/> list.</param>
-        /// <param name="globalSliderVelocity">The default slider velocity of the gameplay in the current beatmap</param>
         public TaikoDifficultyHitObject(HitObject hitObject, HitObject lastObject, HitObject lastLastObject, double clockRate,
                                         List<DifficultyHitObject> objects,
                                         List<TaikoDifficultyHitObject> centreHitObjects,
                                         List<TaikoDifficultyHitObject> rimHitObjects,
-                                        List<TaikoDifficultyHitObject> noteObjects, int index, double globalSliderVelocity)
+                                        List<TaikoDifficultyHitObject> noteObjects, int index)
             : base(hitObject, lastObject, clockRate, objects, index)
         {
             noteDifficultyHitObjects = noteObjects;
-            this.globalSliderVelocity = globalSliderVelocity;
 
             // Create the Colour object, its properties should be filled in by TaikoDifficultyPreprocessor
             Colour = new TaikoDifficultyHitObjectColour();

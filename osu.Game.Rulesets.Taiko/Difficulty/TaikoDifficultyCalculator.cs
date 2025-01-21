@@ -72,8 +72,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             var rimObjects = new List<TaikoDifficultyHitObject>();
             var noteObjects = new List<TaikoDifficultyHitObject>();
 
-            double globalSliderVelocity = beatmap.Difficulty.SliderMultiplier;
-
             // Generate TaikoDifficultyHitObjects from the beatmap's hit objects.
             for (int i = 2; i < beatmap.HitObjects.Count; i++)
             {
@@ -86,8 +84,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     centreObjects,
                     rimObjects,
                     noteObjects,
-                    difficultyHitObjects.Count,
-                    globalSliderVelocity
+                    difficultyHitObjects.Count
                 ));
             }
 
