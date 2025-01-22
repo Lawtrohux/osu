@@ -139,7 +139,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 staminaRating = staminaRating / totalDifficulty * starRating;
             }
 
-            // Initialize hit windows for difficulty attributes
+            // Initialise hit windows for difficulty attributes
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
 
