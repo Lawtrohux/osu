@@ -35,10 +35,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Utils
                 // An interval change occured, add the current data if the next interval is larger.
                 if (!Precision.AlmostEquals(data[i].Interval, data[i + 1].Interval, marginOfError))
                 {
-                    if (!(data[i + 1].Interval > data[i].Interval + marginOfError)) return children;
-
-                    children.Add(data[i]);
-                    i++;
+                    if (data[i + 1].Interval > data[i].Interval + marginOfError)
+                    {
+                        children.Add(data[i]);
+                        i++;
+                    }
 
                     return children;
                 }
