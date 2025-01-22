@@ -8,7 +8,6 @@ using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
-using osu.Game.Rulesets.Difficulty.Utils;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
@@ -17,6 +16,7 @@ using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm;
 using osu.Game.Rulesets.Taiko.Difficulty.Skills;
 using osu.Game.Rulesets.Taiko.Mods;
 using osu.Game.Rulesets.Taiko.Scoring;
+using static osu.Game.Rulesets.Difficulty.Utils.DifficultyCalculationUtils;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty
 {
@@ -103,36 +103,47 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             bool isRelax = mods.Any(h => h is TaikoModRelax);
 
-            var rhythm = skills.OfType<Rhythm>().Single();
-            var reading = skills.OfType<Reading>().Single();
-            var colour = skills.OfType<Colour>().Single();
-            var stamina = skills.OfType<Stamina>().Single(s => !s.SingleColourStamina);
-            var singleColourStamina = skills.OfType<Stamina>().Single(s => s.SingleColourStamina);
+            var rhythm = skills.OfType<Rhythm>().First();
+            var reading = skills.OfType<Reading>().First();
+            var colour = skills.OfType<Colour>().First();
+            var stamina = skills.OfType<Stamina>().First(s => !s.SingleColourStamina);
+            var singleColourStamina = skills.OfType<Stamina>().Last(s => s.SingleColourStamina);
 
-            double rhythmRating = rhythm.DifficultyValue() * rhythm_skill_multiplier;
-            double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
-            double colourRating = colour.DifficultyValue() * colour_skill_multiplier;
-            double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
-            double monoStaminaRating = singleColourStamina.DifficultyValue() * stamina_skill_multiplier;
-            double monoStaminaFactor = staminaRating == 0 ? 1 : Math.Pow(monoStaminaRating / staminaRating, 5);
-
-            double colourDifficultStrains = colour.CountTopWeightedStrains();
-            double rhythmDifficultStrains = rhythm.CountTopWeightedStrains();
-            double staminaDifficultStrains = stamina.CountTopWeightedStrains();
+            double colourDifficulty = colour.DifficultyValue() * colour_skill_multiplier;
+            double staminaDifficulty = stamina.DifficultyValue() * stamina_skill_multiplier;
+            double monoStaminaDifficulty = Math.Pow(singleColourStamina.DifficultyValue() * stamina_skill_multiplier / staminaDifficulty, 5);
 
             // As we don't have pattern integration in osu!taiko, we apply the other two skills relative to rhythm.
-            patternMultiplier = Math.Pow(staminaRating * colourRating, 0.10);
+            patternMultiplier = Math.Pow(staminaDifficulty * colourDifficulty, 0.10);
 
             strainLengthBonus = 1
-                                + Math.Min(Math.Max((staminaDifficultStrains - 1000) / 3700, 0), 0.15)
-                                + Math.Min(Math.Max((staminaRating - 7.0) / 1.0, 0), 0.05);
+                                + Math.Min(Math.Max((stamina.CountTopWeightedStrains() - 1000) / 3700, 0), 0.15)
+                                + Math.Min(Math.Max((staminaDifficulty - 7.0) / 1.0, 0), 0.05);
 
-            double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax, isConvert);
-            double starRating = rescale(combinedRating * 1.4);
+            // Compute strain peaks
+            var strainPeaks = computeStrainPeaks(rhythm, reading, colour, stamina, isRelax);
 
+            double rhythmRating = strainPeaks.rhythmPeaks.Sum();
+            double readingRating = strainPeaks.readingPeaks.Sum();
+            double colourRating = strainPeaks.colourPeaks.Sum();
+            double staminaRating = strainPeaks.staminaPeaks.Sum();
+
+            double totalDifficulty = rhythmRating + readingRating + colourRating + staminaRating;
+            double starRating = rescale(combinedDifficultyValue(strainPeaks) * 1.4);
+
+            if (totalDifficulty > 0)
+            {
+                rhythmRating = rhythmRating / totalDifficulty * starRating;
+                readingRating = readingRating / totalDifficulty * starRating;
+                colourRating = colourRating / totalDifficulty * starRating;
+                staminaRating = staminaRating / totalDifficulty * starRating;
+            }
+
+            // Initialize hit windows for difficulty attributes
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
 
+            // Return difficulty attributes
             TaikoDifficultyAttributes attributes = new TaikoDifficultyAttributes
             {
                 StarRating = starRating,
@@ -141,10 +152,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 ReadingDifficulty = readingRating,
                 ColourDifficulty = colourRating,
                 StaminaDifficulty = staminaRating,
-                MonoStaminaFactor = monoStaminaFactor,
-                RhythmTopStrains = rhythmDifficultStrains,
-                ColourTopStrains = colourDifficultStrains,
-                StaminaTopStrains = staminaDifficultStrains,
+                MonoStaminaFactor = monoStaminaDifficulty,
+                RhythmTopStrains = rhythm.CountTopWeightedStrains(),
+                ColourTopStrains = colour.CountTopWeightedStrains(),
+                StaminaTopStrains = stamina.CountTopWeightedStrains(),
                 GreatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate,
                 OkHitWindow = hitWindows.WindowFor(HitResult.Ok) / clockRate,
                 MaxCombo = beatmap.GetMaxCombo(),
@@ -154,37 +165,53 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         }
 
         /// <summary>
-        /// Returns the combined star rating of the beatmap, calculated using peak strains from all sections of the map.
+        /// Computes strain peaks for each skill.
         /// </summary>
-        /// <remarks>
-        /// For each section, the peak strains of all separate skills are combined into a single peak strain for the section.
-        /// The resulting partial rating of the beatmap is a weighted sum of the combined peaks (higher peaks are weighted more).
-        /// </remarks>
-        private double combinedDifficultyValue(Rhythm rhythm, Reading reading, Colour colour, Stamina stamina, bool isRelax, bool isConvert)
+        private (List<double> rhythmPeaks, List<double> readingPeaks, List<double> colourPeaks, List<double> staminaPeaks) computeStrainPeaks(
+            Rhythm rhythm, Reading reading, Colour colour, Stamina stamina, bool isRelax)
         {
-            List<double> peaks = new List<double>();
-
-            var rhythmPeaks = rhythm.GetCurrentStrainPeaks().ToList();
-            var readingPeaks = reading.GetCurrentStrainPeaks().ToList();
-            var colourPeaks = colour.GetCurrentStrainPeaks().ToList();
-            var staminaPeaks = stamina.GetCurrentStrainPeaks().ToList();
-
-            for (int i = 0; i < colourPeaks.Count; i++)
+            // Common logic for computing peaks
+            List<double> computeSkillPeaks(IEnumerable<double> peaks, double multiplier, Func<double, double>? adjust = null)
             {
-                double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * patternMultiplier;
-                double readingPeak = readingPeaks[i] * reading_skill_multiplier;
-                double colourPeak = isRelax ? 0 : colourPeaks[i] * colour_skill_multiplier; // There is no colour difficulty in relax.
-                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * strainLengthBonus;
-                staminaPeak /= isConvert || isRelax ? 1.5 : 1.0; // Available finger count is increased by 150%, thus we adjust accordingly.
+                var adjustedPeaks = adjust != null ? peaks.Select(adjust) : peaks;
+                return adjustedPeaks.Select(p => p * multiplier).ToList();
+            }
 
-                double peak = DifficultyCalculationUtils.Norm(2, DifficultyCalculationUtils.Norm(1.5, colourPeak, staminaPeak), rhythmPeak, readingPeak);
+            return (
+                computeSkillPeaks(rhythm.GetCurrentStrainPeaks(), rhythm_skill_multiplier, p => p * patternMultiplier),
+                computeSkillPeaks(reading.GetCurrentStrainPeaks(), reading_skill_multiplier),
+                computeSkillPeaks(colour.GetCurrentStrainPeaks(), colour_skill_multiplier, p => isRelax ? 0 : p),
+                computeSkillPeaks(stamina.GetCurrentStrainPeaks(), stamina_skill_multiplier, p => p * strainLengthBonus / (isConvert || isRelax ? 1.5 : 1.0))
+            );
+        }
 
-                // Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort (e.g. /b/2351871).
-                // These sections will not contribute to the difficulty.
+        /// <summary>
+        /// Combines strain peaks into a weighted difficulty value.
+        /// </summary>
+        private double combinedDifficultyValue((List<double> rhythmPeaks, List<double> readingPeaks, List<double> colourPeaks, List<double> staminaPeaks) strainPeaks)
+        {
+            var peaks = new List<double>();
+
+            for (int i = 0; i < strainPeaks.colourPeaks.Count; i++)
+            {
+                double rhythmPeak = strainPeaks.rhythmPeaks[i];
+                double readingPeak = strainPeaks.readingPeaks[i];
+                double colourPeak = strainPeaks.colourPeaks[i];
+                double staminaPeak = strainPeaks.staminaPeaks[i];
+
+                double peak = Norm(2, Norm(1.5, colourPeak, staminaPeak), rhythmPeak, readingPeak);
                 if (peak > 0)
                     peaks.Add(peak);
             }
 
+            return calculateWeightedDifficulty(peaks);
+        }
+
+        /// <summary>
+        /// Calculates the weighted difficulty value from peaks.
+        /// </summary>
+        private double calculateWeightedDifficulty(List<double> peaks)
+        {
             double difficulty = 0;
             double weight = 1;
 
