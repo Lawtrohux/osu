@@ -165,14 +165,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// </remarks>
         private double combinedDifficultyValue(Rhythm rhythm, Reading reading, Colour colour, Stamina stamina, bool isRelax, bool isConvert)
         {
-            List<double> peaks = new List<double>();
+            double[] rhythmPeaks = rhythm.GetCurrentStrainPeaks().ToArray();
+            double[] readingPeaks = reading.GetCurrentStrainPeaks().ToArray();
+            double[] colourPeaks = colour.GetCurrentStrainPeaks().ToArray();
+            double[] staminaPeaks = stamina.GetCurrentStrainPeaks().ToArray();
 
-            var rhythmPeaks = rhythm.GetCurrentStrainPeaks().ToList();
-            var readingPeaks = reading.GetCurrentStrainPeaks().ToList();
-            var colourPeaks = colour.GetCurrentStrainPeaks().ToList();
-            var staminaPeaks = stamina.GetCurrentStrainPeaks().ToList();
+            int count = colourPeaks.Length;
 
-            for (int i = 0; i < colourPeaks.Count; i++)
+            double[] combinedPeaks = new double[count];
+            int combinedCount = 0;
+
+            for (int i = 0; i < count; i++)
             {
                 double rhythmPeak = rhythmPeaks[i] * rhythm_skill_multiplier * patternMultiplier;
                 double readingPeak = readingPeaks[i] * reading_skill_multiplier;
@@ -180,20 +183,20 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * strainLengthBonus;
                 staminaPeak /= isConvert || isRelax ? 1.5 : 1.0; // Available finger count is increased by 150%, thus we adjust accordingly.
 
-                double peak = DifficultyCalculationUtils.Norm(2, DifficultyCalculationUtils.Norm(1.5, colourPeak, staminaPeak), rhythmPeak, readingPeak);
+                double sectionPeak = DifficultyCalculationUtils.Norm(2, DifficultyCalculationUtils.Norm(1.5, colourPeak, staminaPeak), rhythmPeak, readingPeak);
 
-                // Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort (e.g. /b/2351871).
-                // These sections will not contribute to the difficulty.
-                if (peak > 0)
-                    peaks.Add(peak);
+                if (sectionPeak > 0)
+                    combinedPeaks[combinedCount++] = sectionPeak;
             }
+
+            Array.Sort(combinedPeaks, 0, combinedCount);
 
             double difficulty = 0;
             double weight = 1;
 
-            foreach (double strain in peaks.OrderDescending())
+            for (int i = combinedCount - 1; i >= 0; i--)
             {
-                difficulty += strain * weight;
+                difficulty += combinedPeaks[i] * weight;
                 weight *= 0.9;
             }
 
