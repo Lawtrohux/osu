@@ -4,7 +4,6 @@
 using System;
 using System.Linq;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
-using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
 {
@@ -16,24 +15,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
             TaikoDifficultyHitObject hitObject,
             double hitWindowMs)
         {
-            double rhythmMisalignment =
-                new TaikoRhythmicAlignmentField(hitObject.PatternData.NoteRhythm, 4, 0.7071, 0.7071)
-                .CalculateMisalignment(hitWindowMs);
+            double rhythmMisalignment = hitObject.Pattern.Rhythm.CalculateMisalignment(hitWindowMs);
             rhythmMisalignment *= 0.66;
 
-            double monoMisalignment =
-                new TaikoRhythmicAlignmentField(hitObject.PatternData.MonoRhythm, 4, 0.5, 0.5)
-                .CalculateMisalignment(hitWindowMs);
+            double monoMisalignment = hitObject.Pattern.Mono?.CalculateMisalignment(hitWindowMs) ?? 0;
 
-            double colourChangeMisalignment = 0;
-            if (hitObject.PatternData.ColourChangeRhythm != null)
-            {
-                colourChangeMisalignment =
-                    new TaikoRhythmicAlignmentField(hitObject.PatternData.ColourChangeRhythm, 4, 0.5, 0.7071)
-                    .CalculateMisalignment(hitWindowMs);
-            }
+            double colourChangeMisalignment = hitObject.Pattern.ColourChange?.CalculateMisalignment(hitWindowMs) ?? 0;
 
-            // System.Console.WriteLine($"{hitObject.StartTime},{rhythmMisalignment},{monoMisalignment},{colourChangeMisalignment}");
+            // Console.WriteLine($"Rhythm: {rhythmMisalignment}, Colour Change: {colourChangeMisalignment}, Mono: {monoMisalignment}");
 
             return pNorm(2, rhythmMisalignment, colourChangeMisalignment) + monoMisalignment;
         }
