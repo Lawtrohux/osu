@@ -8,6 +8,7 @@ using osu.Game.Beatmaps;
 using osu.Game.Rulesets.Difficulty;
 using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
+using osu.Game.Rulesets.Difficulty.Utils;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
@@ -19,9 +20,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 {
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
-        private const double difficulty_multiplier = 0.073;
-        private const double stamina_skill_multiplier = 0.4 * difficulty_multiplier;
-        private const double pattern_skill_multiplier = 0.6 * difficulty_multiplier;
+        private const double difficulty_multiplier = 0.067;
+        private const double stamina_skill_multiplier = 0.5 * difficulty_multiplier;
+        private const double pattern_skill_multiplier = 0.5 * difficulty_multiplier;
+        private const double reading_skill_multiplier = 0.1 * difficulty_multiplier;
+
+        private double strainLengthBonus;
+        private double patternMultiplier;
+
+        private bool isConvert;
 
         public override int Version => 20241007;
 
@@ -32,11 +39,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         protected override Skill[] CreateSkills(IBeatmap beatmap, Mod[] mods, double clockRate)
         {
+            HitWindows hitWindows = new TaikoHitWindows();
+            hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
+
+            isConvert = beatmap.BeatmapInfo.Ruleset.OnlineID == 0;
+
             return new Skill[]
             {
                 new Pattern(beatmap, mods, clockRate),
-                new Stamina(mods, false),
-                new Stamina(mods, true)
+                new Reading(mods),
+                new Stamina(mods, false, isConvert),
+                new Stamina(mods, true, isConvert)
             };
         }
 
@@ -50,7 +63,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
         protected override IEnumerable<DifficultyHitObject> CreateDifficultyHitObjects(IBeatmap beatmap, double clockRate)
         {
-            List<DifficultyHitObject> difficultyHitObjects = TaikoDifficultyHitObject.FromHitObjects(beatmap.HitObjects, clockRate);
+            List<DifficultyHitObject> difficultyHitObjects = TaikoDifficultyHitObject.FromHitObjects(
+                beatmap.HitObjects,
+                clockRate,
+                beatmap.ControlPointInfo,
+                beatmap.Difficulty.SliderMultiplier);
             return difficultyHitObjects;
         }
 
@@ -59,52 +76,47 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (beatmap.HitObjects.Count == 0)
                 return new TaikoDifficultyAttributes { Mods = mods };
 
-            Pattern pattern = (Pattern)skills.First(x => x is Pattern);
-            Stamina stamina = (Stamina)skills.First(x => x is Stamina);
-            Stamina singleColourStamina = (Stamina)skills.Last(x => x is Stamina);
+            var pattern = skills.OfType<Pattern>().Single();
+            var stamina = skills.OfType<Stamina>().Single(s => !s.SingleColourStamina);
+            var singleColourStamina = skills.OfType<Stamina>().Single(s => s.SingleColourStamina);
+            var reading = skills.OfType<Reading>().Single();
+
+            bool isRelax = mods.Any(h => h is TaikoModRelax);
 
             double patternRating = pattern.DifficultyValue() * pattern_skill_multiplier;
+            double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
+
+
             double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
             double monoStaminaRating = singleColourStamina.DifficultyValue() * stamina_skill_multiplier;
             double monoStaminaFactor = staminaRating == 0 ? 1 : Math.Pow(monoStaminaRating / staminaRating, 5);
 
-            double combinedRating = combinedDifficultyValue(pattern, stamina);
-            double starRating = rescale(combinedRating * 1.4);
-
-            // TODO: This is temporary measure as we don't detect abuse of multiple-input playstyles of converts within the current system.
-            if (beatmap.BeatmapInfo.Ruleset.OnlineID == 0)
-            {
-                starRating *= 0.925;
-            }
-
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
+
+            double staminaDifficultStrains = stamina.CountTopWeightedStrains();
+            double patternDifficultStrains = pattern.CountTopWeightedStrains();
+
+            strainLengthBonus = 1
+                    + Math.Min(Math.Max((staminaDifficultStrains - 1000) / 3700, 0), 0.15)
+                    + Math.Min(Math.Max((staminaRating - 7.0) / 1.0, 0), 0.05);
+
+            double combinedRating = combinedDifficultyValue(pattern, reading, stamina, isRelax, isConvert);
+            double starRating = rescale(combinedRating * 1.4);
 
             TaikoDifficultyAttributes attributes = new TaikoDifficultyAttributes
             {
                 StarRating = starRating,
                 Mods = mods,
+                ReadingDifficulty = readingRating,
                 StaminaDifficulty = staminaRating,
                 MonoStaminaFactor = monoStaminaFactor,
                 PatternDifficulty = patternRating,
-                PeakDifficulty = combinedRating,
-                GreatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate,
-                OkHitWindow = hitWindows.WindowFor(HitResult.Ok) / clockRate,
+                StaminaTopStrains = staminaDifficultStrains,
                 MaxCombo = beatmap.GetMaxCombo(),
             };
 
             return attributes;
-        }
-
-        /// <summary>
-        /// Applies a final re-scaling of the star rating.
-        /// </summary>
-        /// <param name="sr">The raw star rating value before re-scaling.</param>
-        private double rescale(double sr)
-        {
-            if (sr < 0) return sr;
-
-            return 10.43 * Math.Log(sr / 8 + 1);
         }
 
         /// <summary>
@@ -114,19 +126,24 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// For each section, the peak strains of all separate skills are combined into a single peak strain for the section.
         /// The resulting partial rating of the beatmap is a weighted sum of the combined peaks (higher peaks are weighted more).
         /// </remarks>
-        private double combinedDifficultyValue(Pattern patttern, Stamina stamina)
+        private double combinedDifficultyValue(Pattern pattern, Reading reading, Stamina stamina, bool isRelax, bool isConvert)
         {
             List<double> peaks = new List<double>();
 
+            var readingPeaks = reading.GetCurrentStrainPeaks().ToList();
             var staminaPeaks = stamina.GetCurrentStrainPeaks().ToList();
-            var patternPeaks = patttern.GetCurrentStrainPeaks().ToList();
+            var patternPeaks = pattern.GetCurrentStrainPeaks().ToList();
 
             for (int i = 0; i < staminaPeaks.Count; i++)
             {
                 double patternPeak = patternPeaks[i] * pattern_skill_multiplier;
-                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier;
+                double staminaPeak = staminaPeaks[i] * stamina_skill_multiplier * strainLengthBonus;
+                double readingPeak = readingPeaks[i] * reading_skill_multiplier;
 
-                double peak = norm(2, patternPeak, staminaPeak);
+                // Available finger count is increased by 150%, thus we adjust accordingly.
+                staminaPeak /= isConvert || isRelax ? 1.5 : 1.0;
+
+                double peak = DifficultyCalculationUtils.Norm(2, patternPeak, staminaPeak, readingPeak);
 
                 // Sections with 0 strain are excluded to avoid worst-case time complexity of the following sort (e.g. /b/2351871).
                 // These sections will not contribute to the difficulty.
@@ -147,10 +164,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         }
 
         /// <summary>
-        /// Returns the <i>p</i>-norm of an <i>n</i>-dimensional vector.
+        /// Applies a final re-scaling of the star rating.
         /// </summary>
-        /// <param name="p">The value of <i>p</i> to calculate the norm for.</param>
-        /// <param name="values">The coefficients of the vector.</param>
-        private double norm(double p, params double[] values) => Math.Pow(values.Sum(x => Math.Pow(x, p)), 1 / p);
+        /// <param name="sr">The raw star rating value before re-scaling.</param>
+        private static double rescale(double sr)
+        {
+            if (sr < 0)
+                return sr;
+
+            return 10.43 * Math.Log(sr / 8 + 1);
+        }
     }
 }
