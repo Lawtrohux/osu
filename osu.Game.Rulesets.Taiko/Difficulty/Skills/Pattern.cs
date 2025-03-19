@@ -7,7 +7,7 @@ using osu.Game.Rulesets.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Difficulty.Skills;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
-using osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern;
+using osu.Game.Rulesets.Taiko.Difficulty.Evaluators;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 using osu.Game.Rulesets.Taiko.Scoring;
 
@@ -21,7 +21,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
 
         private double greatHitWindowMs;
 
-        private double targetHitWindow;
+        private readonly double targetHitWindow;
 
         public Pattern(IBeatmap beatmap, Mod[] mods, double clockRate) : base(mods)
         {

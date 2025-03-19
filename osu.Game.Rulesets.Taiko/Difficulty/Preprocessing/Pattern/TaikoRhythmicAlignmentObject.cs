@@ -31,11 +31,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
             Index = events.Count;
 
             var previousDeltaTimes = GetPreviousObjects(true)
-                .SelectPair((x, y) => x.hitObject.StartTime - y.hitObject.StartTime)
-                .Take(2)
-                .ToList();
+                                     .SelectPair((x, y) => x.hitObject.StartTime - y.hitObject.StartTime)
+                                     .Take(2)
+                                     .ToList();
 
             isSlowDown = previousDeltaTimes.Count == 2 && previousDeltaTimes[0] > previousDeltaTimes[1];
+
             if (isSlowDown)
             {
                 SlowdownIndex = slowdownEvents.Count;
@@ -46,6 +47,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
         private TaikoRhythmicAlignmentObject? previous(int backwardsIndex, int? currentIndex, IReadOnlyCollection<TaikoRhythmicAlignmentObject> events)
         {
             if (currentIndex == null) return null;
+
             return events.ElementAtOrDefault(currentIndex.Value - (backwardsIndex + 1));
         }
 
@@ -61,6 +63,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
             {
                 var previous = Previous(i);
                 if (previous == null) break;
+
                 yield return previous;
             }
         }
@@ -73,28 +76,29 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
             {
                 var previousSlowdown = PreviousSlowdown(i);
                 if (previousSlowdown == null) break;
+
                 yield return previousSlowdown;
             }
         }
-
 
         public double CalculateMisalignment(double hitWindowMs)
         {
             IEnumerable<TaikoRhythmicAlignmentObject> previousObjects =
                 isSlowDown ? GetPreviousSlowdownObjects() : GetPreviousObjects();
             List<(double dt, double amplitude)> residue = previousObjects
-                .Take(field.MaxPreviousEvents)
-                .Select(x => (dt: hitObject.StartTime - x.hitObject.StartTime, amplitude: 1d))
-                .ToList();
+                                                          .Take(field.MaxPreviousEvents)
+                                                          .Select(x => (dt: hitObject.StartTime - x.hitObject.StartTime, amplitude: 1d))
+                                                          .ToList();
 
             if (residue.Count == 0) return 0;
+
             double baseInterval = residue[0].dt;
 
             List<double> decayMultipliers = residue
-                .Select((x, i) =>
-                    Math.Pow(field.TimeDecay, x.dt / 1000) *
-                    Math.Pow(field.CycleDecay, x.dt / baseInterval))
-                .ToList();
+                                            .Select((x, i) =>
+                                                Math.Pow(field.TimeDecay, x.dt / 1000) *
+                                                Math.Pow(field.CycleDecay, x.dt / baseInterval))
+                                            .ToList();
 
             double leniencyExponent = calculateLeniencyExponent(hitWindowMs / baseInterval);
             double totalMisalignment = 0;
@@ -115,8 +119,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
 
             // This is to avoid missing residues that aren't catched by any harmonic
             totalMisalignment += residue
-                .Select((x, i) => x.amplitude * decayMultipliers[i])
-                .Sum((x) => x * field.HarmonicsCount);
+                                 .Select((x, i) => x.amplitude * decayMultipliers[i])
+                                 .Sum((x) => x * field.HarmonicsCount);
 
             return totalMisalignment;
         }

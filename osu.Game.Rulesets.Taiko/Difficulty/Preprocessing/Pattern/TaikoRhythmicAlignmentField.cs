@@ -27,7 +27,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
 
         public readonly int MaxPreviousEvents;
 
-
         /// <summary>
         /// Creates a new field to calculate rhythmic misalignment.
         /// </summary>

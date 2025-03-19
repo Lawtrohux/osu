@@ -29,6 +29,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
                 case HitType.Centre:
                     Mono = patternFields.CentreField.Add(hitObject);
                     break;
+
                 case HitType.Rim:
                     Mono = patternFields.RimField.Add(hitObject);
                     break;

@@ -5,20 +5,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
 {
     public class TaikoPatternFields
     {
-        public TaikoRhythmicAlignmentField RhythmField;
+        public TaikoRhythmicAlignmentField RhythmField = new TaikoRhythmicAlignmentField(4, 0.5, 0.7071);
 
-        public TaikoRhythmicAlignmentField CentreField;
+        public TaikoRhythmicAlignmentField CentreField = new TaikoRhythmicAlignmentField(4, 0.5, 0.7071);
 
-        public TaikoRhythmicAlignmentField RimField;
+        public TaikoRhythmicAlignmentField RimField = new TaikoRhythmicAlignmentField(4, 0.5, 0.7071);
 
-        public TaikoRhythmicAlignmentField ColourChangeField;
-
-        public TaikoPatternFields()
-        {
-            RhythmField = new TaikoRhythmicAlignmentField(4, 0.5, 0.7071);
-            CentreField = new TaikoRhythmicAlignmentField(4, 0.5, 0.7071);
-            RimField = new TaikoRhythmicAlignmentField(4, 0.5, 0.7071);
-            ColourChangeField = new TaikoRhythmicAlignmentField(4, 0.5, 0.7071);
-        }
+        public TaikoRhythmicAlignmentField ColourChangeField = new TaikoRhythmicAlignmentField(4, 0.5, 0.7071);
     }
 }

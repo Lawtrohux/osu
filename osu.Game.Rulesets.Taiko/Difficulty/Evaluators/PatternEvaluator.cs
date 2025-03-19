@@ -5,7 +5,7 @@ using System;
 using System.Linq;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
 
-namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators.Pattern
+namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 {
     public static class PatternEvaluator
     {
