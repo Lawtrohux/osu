@@ -30,12 +30,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
             TaikoDifficultyHitObject hitObject,
             double hitWindowMs)
         {
-            double rhythmMisalignment = hitObject.Pattern.Rhythm.CalculateMisalignment(hitWindowMs);
+            double rhythmMisalignment = hitObject.Rhythm.CalculateMisalignment(hitWindowMs);
             rhythmMisalignment *= 2;
 
-            double monoMisalignment = hitObject.Pattern.Mono?.CalculateMisalignment(monoEffectiveHitWindow(hitObject, hitWindowMs)) ?? 0;
+            double monoMisalignment = hitObject.Mono?.CalculateMisalignment(monoEffectiveHitWindow(hitObject, hitWindowMs)) ?? 0;
 
-            double colourChangeMisalignment = hitObject.Pattern.ColourChange?.CalculateMisalignment(hitWindowMs) ?? 0;
+            double colourChangeMisalignment = hitObject.ColourChange?.CalculateMisalignment(hitWindowMs) ?? 0;
 
             // Console.WriteLine($"Rhythm: {rhythmMisalignment}, Colour Change: {colourChangeMisalignment}, Mono: {monoMisalignment}");
 
