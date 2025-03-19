@@ -117,7 +117,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
                 }
             }
 
-            // This is to avoid missing residues that aren't catched by any harmonic
+            // This is to avoid missing residues that aren't caught by any harmonic
             totalMisalignment += residue
                                  .Select((x, i) => x.amplitude * decayMultipliers[i])
                                  .Sum((x) => x * field.HarmonicsCount);
