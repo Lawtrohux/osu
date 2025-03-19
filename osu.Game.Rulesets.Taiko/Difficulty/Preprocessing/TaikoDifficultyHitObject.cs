@@ -12,24 +12,12 @@ using osu.Game.Rulesets.Taiko.Objects;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
 {
-    /// <summary>
-    /// Represents a single hit object in taiko difficulty calculation.
-    /// </summary>
     public class TaikoDifficultyHitObject : DifficultyHitObject
     {
-        /// <summary>
-        /// The list of all <see cref="TaikoDifficultyHitObject"/> of the same colour as this <see cref="TaikoDifficultyHitObject"/> in the beatmap.
-        /// </summary>
         private readonly IReadOnlyList<TaikoDifficultyHitObject>? monoDifficultyHitObjects;
 
-        /// <summary>
-        /// The list consecutive <see cref="TaikoDifficultyHitObject"/> of the same colour as this <see cref="TaikoDifficultyHitObject"/>.
-        /// </summary>
         public IReadOnlyList<TaikoDifficultyHitObject> MonoStreak { get; private set; }
 
-        /// <summary>
-        /// The index of this <see cref="TaikoDifficultyHitObject"/> in <see cref="monoDifficultyHitObjects"/>.
-        /// </summary>
         public readonly int MonoIndex;
 
         public readonly int MonoStreakIndex;
@@ -40,32 +28,22 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
 
         public bool IsColourChange => PreviousColourChange == this;
 
-        public TaikoDifficultyHitObjectPattern Pattern;
+        public TaikoRhythmicAlignmentObject Rhythm;
 
-        /// <summary>
-        /// The adjusted BPM of this hit object, based on its slider velocity and scroll speed.
-        /// </summary>
+        public TaikoRhythmicAlignmentObject? Mono;
+
+        public TaikoRhythmicAlignmentObject? ColourChange;
+
         public double EffectiveBPM;
 
-        /// <summary>
-        /// Creates a new difficulty hit object.
-        /// </summary>
-        /// <param name="hitObject">The gameplay <see cref="HitObject"/> associated with this difficulty object.</param>
-        /// <param name="lastObject">The gameplay <see cref="HitObject"/> preceding <paramref name="hitObject"/>.</param>
-        /// <param name="clockRate">The rate of the gameplay clock. Modified by speed-changing mods.</param>
-        /// <param name="objects">The list of all <see cref="DifficultyHitObject"/>s in the current beatmap.</param>
-        /// <param name="monoObjects">The list of all <see cref="TaikoDifficultyHitObject"/>s of the same colour as this <see cref="TaikoDifficultyHitObject"/> in the beatmap.</param>
-        /// <param name="monoStreak">The list of previous consecutive <see cref="TaikoDifficultyHitObject"/>s of the same colour as this <see cref="TaikoDifficultyHitObject"/>.</param>
-        /// <param name="controlPointInfo">The control point info of the beatmap.</param>
-        /// <param name="globalSliderVelocity">The global slider velocity of the beatmap.</param>
         private TaikoDifficultyHitObject(HitObject hitObject, HitObject lastObject, double clockRate,
-                                        List<DifficultyHitObject> objects,
-                                        List<TaikoDifficultyHitObject> monoObjects,
-                                        List<TaikoDifficultyHitObject> monoStreak,
-                                        TaikoPatternFields patternFields,
-                                        int index,
-                                        ControlPointInfo controlPointInfo,
-                                        double globalSliderVelocity)
+                                         List<DifficultyHitObject> objects,
+                                         List<TaikoDifficultyHitObject> monoObjects,
+                                         List<TaikoDifficultyHitObject> monoStreak,
+                                         TaikoPatternFields patternFields,
+                                         int index,
+                                         ControlPointInfo controlPointInfo,
+                                         double globalSliderVelocity)
             : base(hitObject, lastObject, clockRate, objects, index)
         {
             MonoStreakIndex = monoStreak.Count;
@@ -76,17 +54,25 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             monoObjects.Add(this);
             monoDifficultyHitObjects = monoObjects;
 
-            Pattern = new TaikoDifficultyHitObjectPattern(this, patternFields);
+            Rhythm = patternFields.RhythmField.Add(this);
 
-            // Using `hitObject.StartTime` causes floating point error differences
+            if (IsColourChange)
+                ColourChange = patternFields.ColourChangeField.Add(this);
+
+            switch ((BaseObject as Hit)?.Type)
+            {
+                case HitType.Centre:
+                    Mono = patternFields.CentreField.Add(this);
+                    break;
+
+                case HitType.Rim:
+                    Mono = patternFields.RimField.Add(this);
+                    break;
+            }
+
             double normalisedStartTime = StartTime * clockRate;
-
-            // Retrieve the timing point at the note's start time
             TimingControlPoint currentControlPoint = controlPointInfo.TimingPointAt(normalisedStartTime);
-
-            // Calculate the slider velocity at the note's start time.
             double currentSliderVelocity = calculateSliderVelocity(controlPointInfo, globalSliderVelocity, normalisedStartTime, clockRate);
-
             EffectiveBPM = currentControlPoint.BPM * currentSliderVelocity;
         }
 
@@ -107,7 +93,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             TaikoPatternFields patternFields = new TaikoPatternFields();
 
             hitObjects
-                // We don't consider non-note objects (spinners & sliders) for now
                 .Where(hitObject => hitObject is Hit)
                 .ForEachPair((previous, current) =>
                 {
@@ -115,9 +100,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
                     var currentHit = (Hit)current;
 
                     if (previousHit.Type != currentHit.Type)
-                    {
                         monoStreak = new List<TaikoDifficultyHitObject>();
-                    }
 
                     var difficultyHitObject = new TaikoDifficultyHitObject(
                         current, previous, clockRate,
@@ -135,13 +118,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing
             return difficultyHitObjects;
         }
 
-        /// <summary>
-        /// Calculates the slider velocity based on control point info and clock rate.
-        /// </summary>
         private static double calculateSliderVelocity(ControlPointInfo controlPointInfo, double globalSliderVelocity, double startTime, double clockRate)
         {
             var activeEffectControlPoint = controlPointInfo.EffectPointAt(startTime);
-            return globalSliderVelocity * (activeEffectControlPoint.ScrollSpeed) * clockRate;
+            return globalSliderVelocity * activeEffectControlPoint.ScrollSpeed * clockRate;
         }
 
         public TaikoDifficultyHitObject? PreviousMono(int backwardsIndex) => monoDifficultyHitObjects?.ElementAtOrDefault(MonoIndex - (backwardsIndex + 1));
