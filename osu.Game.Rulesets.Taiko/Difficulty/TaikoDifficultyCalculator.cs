@@ -82,12 +82,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             bool isRelax = mods.Any(h => h is TaikoModRelax);
 
-            double patternRating = pattern.DifficultyValue() * pattern_skill_multiplier;
-            double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
+            double patternSkill = pattern.DifficultyValue() * pattern_skill_multiplier;
+            double readingSkill = reading.DifficultyValue() * reading_skill_multiplier;
 
-            double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
-            double monoStaminaRating = singleColourStamina.DifficultyValue() * stamina_skill_multiplier;
-            double monoStaminaFactor = staminaRating == 0 ? 1 : Math.Pow(monoStaminaRating / staminaRating, 5);
+            double staminaSkill = stamina.DifficultyValue() * stamina_skill_multiplier;
+            double monoStaminaSkill = singleColourStamina.DifficultyValue() * stamina_skill_multiplier;
+            double monoStaminaFactor = staminaSkill == 0 ? 1 : Math.Pow(monoStaminaSkill / staminaSkill, 5);
 
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
@@ -97,19 +97,26 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             strainLengthBonus = 1
                                 + Math.Min(Math.Max((staminaDifficultStrains - 1000) / 3700, 0), 0.15)
-                                + Math.Min(Math.Max((staminaRating - 7.0) / 1.0, 0), 0.05);
+                                + Math.Min(Math.Max((staminaSkill - 7.0) / 1.0, 0), 0.05);
 
             double combinedRating = combinedDifficultyValue(pattern, reading, stamina, isRelax, isConvert);
             double starRating = rescale(combinedRating * 1.4);
+
+            // Calculate proportional contribution of each skill to the combinedRating.
+            double skillRating = starRating / (patternSkill + readingSkill + staminaSkill);
+
+            double patternDifficulty = patternSkill * skillRating;
+            double readingDifficulty = readingSkill * skillRating;
+            double staminaRating = staminaSkill * skillRating;
 
             TaikoDifficultyAttributes attributes = new TaikoDifficultyAttributes
             {
                 StarRating = starRating,
                 Mods = mods,
-                ReadingDifficulty = readingRating,
+                ReadingDifficulty = readingDifficulty,
                 StaminaDifficulty = staminaRating,
                 MonoStaminaFactor = monoStaminaFactor,
-                PatternDifficulty = patternRating,
+                PatternDifficulty = patternDifficulty,
                 StaminaTopStrains = staminaDifficultStrains,
                 PatternTopStrains = patternDifficultStrains,
                 MaxCombo = beatmap.GetMaxCombo(),
