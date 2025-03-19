@@ -10,15 +10,15 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern
 {
     public class TaikoRhythmicAlignmentObject
     {
-        private TaikoRhythmicAlignmentField field;
+        private readonly TaikoRhythmicAlignmentField field;
 
-        private TaikoDifficultyHitObject hitObject;
+        private readonly TaikoDifficultyHitObject hitObject;
 
         public int Index { get; private set; }
 
         public int? SlowdownIndex { get; private set; }
 
-        private bool isSlowDown;
+        private readonly bool isSlowDown;
 
         public TaikoRhythmicAlignmentObject(
             TaikoRhythmicAlignmentField field,
