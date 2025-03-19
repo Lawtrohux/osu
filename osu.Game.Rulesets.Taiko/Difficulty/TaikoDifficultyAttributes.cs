@@ -34,6 +34,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         [JsonProperty("mono_stamina_factor")]
         public double MonoStaminaFactor { get; set; }
 
+        [JsonProperty("pattern_difficult_strains")]
+        public double PatternTopStrains { get; set; }
+
         [JsonProperty("stamina_difficult_strains")]
         public double StaminaTopStrains { get; set; }
 

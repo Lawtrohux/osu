@@ -26,7 +26,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private const double reading_skill_multiplier = 0.1 * difficulty_multiplier;
 
         private double strainLengthBonus;
-        private double patternMultiplier;
 
         private bool isConvert;
 
@@ -86,7 +85,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double patternRating = pattern.DifficultyValue() * pattern_skill_multiplier;
             double readingRating = reading.DifficultyValue() * reading_skill_multiplier;
 
-
             double staminaRating = stamina.DifficultyValue() * stamina_skill_multiplier;
             double monoStaminaRating = singleColourStamina.DifficultyValue() * stamina_skill_multiplier;
             double monoStaminaFactor = staminaRating == 0 ? 1 : Math.Pow(monoStaminaRating / staminaRating, 5);
@@ -98,8 +96,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double patternDifficultStrains = pattern.CountTopWeightedStrains();
 
             strainLengthBonus = 1
-                    + Math.Min(Math.Max((staminaDifficultStrains - 1000) / 3700, 0), 0.15)
-                    + Math.Min(Math.Max((staminaRating - 7.0) / 1.0, 0), 0.05);
+                                + Math.Min(Math.Max((staminaDifficultStrains - 1000) / 3700, 0), 0.15)
+                                + Math.Min(Math.Max((staminaRating - 7.0) / 1.0, 0), 0.05);
 
             double combinedRating = combinedDifficultyValue(pattern, reading, stamina, isRelax, isConvert);
             double starRating = rescale(combinedRating * 1.4);
@@ -113,6 +111,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                 MonoStaminaFactor = monoStaminaFactor,
                 PatternDifficulty = patternRating,
                 StaminaTopStrains = staminaDifficultStrains,
+                PatternTopStrains = patternDifficultStrains,
                 MaxCombo = beatmap.GetMaxCombo(),
             };
 
