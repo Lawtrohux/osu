@@ -51,7 +51,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             {
                 new Rhythm(mods, hitWindows.WindowFor(HitResult.Great) / clockRate),
                 new Reading(mods),
-                new Colour(mods),
+                new Colour(mods, hitWindows.WindowFor(HitResult.Great) / clockRate),
                 new Stamina(mods, false, isConvert),
                 new Stamina(mods, true, isConvert)
             };

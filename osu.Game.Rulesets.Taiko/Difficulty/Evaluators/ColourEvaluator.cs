@@ -17,14 +17,18 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
         /// considering the delta time between each colour sequence.
         /// </summary>
         /// <param name="hitObject">The current hitObject to consider.</param>
+        /// <param name="hitWindow"></param>
         /// <param name="threshold"> The allowable margin of error for determining whether ratios are consistent.</param>
         /// <param name="maxObjectsToCheck">The maximum objects to check per count of consistent ratio.</param>
-        private static double consistentRatioPenalty(TaikoDifficultyHitObject hitObject, double threshold = 0.01, int maxObjectsToCheck = 64)
+        private static double consistentRatioPenalty(TaikoDifficultyHitObject hitObject, double hitWindow, double threshold = 0.01, int maxObjectsToCheck = 64)
         {
             int consistentRatioCount = 0;
             double totalRatioCount = 0.0;
 
             TaikoDifficultyHitObject current = hitObject;
+
+            // If the pattern's duration shows it can be hit within a single hit window, then count it as a consistent ratio.
+            var sameRhythmGroup = hitObject.RhythmData.SameRhythmGroupedHitObjects;
 
             for (int i = 0; i < maxObjectsToCheck; i++)
             {
@@ -45,6 +49,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                     break;
                 }
 
+                // If the pattern is a confirmed doublet, only count if the current hitobject is the first one in the group.
+                if (sameRhythmGroup?.HitObjects.Count == 2 && hitObject == sameRhythmGroup.FirstHitObject)
+                {
+                    // I got a blank space babyyyyy, and I'll write some code
+                }
+
                 // Move to the previous object
                 current = previousHitObject;
             }
@@ -58,7 +68,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
         /// <summary>
         /// Evaluate the difficulty of the first hitobject within a colour streak.
         /// </summary>
-        public static double EvaluateDifficultyOf(DifficultyHitObject hitObject)
+        public static double EvaluateDifficultyOf(DifficultyHitObject hitObject, double hitWindow)
         {
             var taikoObject = (TaikoDifficultyHitObject)hitObject;
             TaikoColourData colourData = taikoObject.ColourData;
@@ -73,7 +83,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
             if (colourData.RepeatingHitPattern?.FirstHitObject == hitObject) // Difficulty for RepeatingHitPattern
                 difficulty += evaluateRepeatingHitPatternsDifficulty(colourData.RepeatingHitPattern);
 
-            double consistencyPenalty = consistentRatioPenalty(taikoObject);
+            double consistencyPenalty = consistentRatioPenalty(taikoObject, hitWindow);
             difficulty *= consistencyPenalty;
 
             return difficulty;

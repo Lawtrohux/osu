@@ -20,14 +20,17 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Skills
         // slower maps.
         protected override double StrainDecayBase => 0.8;
 
-        public Colour(Mod[] mods)
+        private readonly double greatHitWindow;
+
+        public Colour(Mod[] mods, double greatHitWindow)
             : base(mods)
         {
+            this.greatHitWindow = greatHitWindow;
         }
 
         protected override double StrainValueOf(DifficultyHitObject current)
         {
-            return ColourEvaluator.EvaluateDifficultyOf(current);
+            return ColourEvaluator.EvaluateDifficultyOf(current, greatHitWindow);
         }
     }
 }
