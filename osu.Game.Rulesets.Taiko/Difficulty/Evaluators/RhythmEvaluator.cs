@@ -61,10 +61,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                         maxValue: 1);
                 }
 
-                // If the pattern is a confirmed doublet, only return the interval difficulty.
-                if (sameRhythmGroupedHitObjects?.HitObjects.Count == 2 && sameRhythmGroupedHitObjects?.FirstHitObject == sameRhythmGroupedHitObjects?.HitObjects[0])
+                // If the pattern is a doublet or triplet, apply a penalty instead of calculating full interval difficulty.
+                if (sameRhythmGroupedHitObjects is { HitObjects.Count: 2 or 3 } &&
+                    sameRhythmGroupedHitObjects.FirstHitObject == sameRhythmGroupedHitObjects.HitObjects[0])
                 {
-                    return 0;
+                    const double penalty = -0.01;
+                    return penalty;
                 }
             }
 
