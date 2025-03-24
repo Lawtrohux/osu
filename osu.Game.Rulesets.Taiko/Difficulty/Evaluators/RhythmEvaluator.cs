@@ -62,7 +62,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                 }
 
                 // If the pattern is a doublet or triplet, apply a penalty instead of calculating full interval difficulty.
-                if (sameRhythmGroupedHitObjects is { HitObjects.Count: 2 or 3 } &&
+                if (sameRhythmGroupedHitObjects is { HitObjects.Count: 2 } &&
                     sameRhythmGroupedHitObjects.FirstHitObject == sameRhythmGroupedHitObjects.HitObjects[0])
                 {
                     const double penalty = -0.01;
