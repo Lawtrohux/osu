@@ -41,8 +41,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Colour
 
                         foreach (var hitObject in monoStreak.HitObjects)
                         {
-                            hitObject.ColourData.RepeatingHitPattern = repeatingHitPattern;
-                            hitObject.ColourData.AlternatingMonoPattern = monoPattern;
                             hitObject.ColourData.MonoStreak = monoStreak;
                         }
                     }

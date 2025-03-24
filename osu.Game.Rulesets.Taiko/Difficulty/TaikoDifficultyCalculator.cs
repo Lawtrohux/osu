@@ -12,7 +12,7 @@ using osu.Game.Rulesets.Difficulty.Utils;
 using osu.Game.Rulesets.Mods;
 using osu.Game.Rulesets.Scoring;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing;
-using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Colour;
+using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Pattern;
 using osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm;
 using osu.Game.Rulesets.Taiko.Difficulty.Skills;
 using osu.Game.Rulesets.Taiko.Mods;
@@ -25,7 +25,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         private const double difficulty_multiplier = 0.084375;
         private const double rhythm_skill_multiplier = 0.65 * difficulty_multiplier;
         private const double reading_skill_multiplier = 0.100 * difficulty_multiplier;
-        private const double colour_skill_multiplier = 0.375 * difficulty_multiplier;
+        private const double colour_skill_multiplier = 0.65 * difficulty_multiplier;
         private const double stamina_skill_multiplier = 0.445 * difficulty_multiplier;
 
         private double strainLengthBonus;
@@ -50,8 +50,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             return new Skill[]
             {
                 new Rhythm(mods, hitWindows.WindowFor(HitResult.Great) / clockRate),
+                new Pattern(beatmap, mods, clockRate),
                 new Reading(mods),
-                new Colour(mods),
                 new Stamina(mods, false, isConvert),
                 new Stamina(mods, true, isConvert)
             };
@@ -71,6 +71,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             var centreObjects = new List<TaikoDifficultyHitObject>();
             var rimObjects = new List<TaikoDifficultyHitObject>();
             var noteObjects = new List<TaikoDifficultyHitObject>();
+            var monoStreak = new List<TaikoDifficultyHitObject>();
+            var patternFields = new TaikoPatternFields();
 
             // Generate TaikoDifficultyHitObjects from the beatmap's hit objects.
             for (int i = 2; i < beatmap.HitObjects.Count; i++)
@@ -83,13 +85,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                     centreObjects,
                     rimObjects,
                     noteObjects,
+                    monoStreak,
+                    patternFields,
                     difficultyHitObjects.Count,
                     beatmap.ControlPointInfo,
                     beatmap.Difficulty.SliderMultiplier
                 ));
             }
 
-            TaikoColourDifficultyPreprocessor.ProcessAndAssign(difficultyHitObjects);
             TaikoRhythmDifficultyPreprocessor.ProcessAndAssign(noteObjects);
 
             return difficultyHitObjects;
@@ -103,19 +106,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             bool isRelax = mods.Any(h => h is TaikoModRelax);
 
             var rhythm = skills.OfType<Rhythm>().Single();
+            var pattern = skills.OfType<Pattern>().Single();
             var reading = skills.OfType<Reading>().Single();
-            var colour = skills.OfType<Colour>().Single();
             var stamina = skills.OfType<Stamina>().Single(s => !s.SingleColourStamina);
             var singleColourStamina = skills.OfType<Stamina>().Single(s => s.SingleColourStamina);
 
             double rhythmSkill = rhythm.DifficultyValue() * rhythm_skill_multiplier;
             double readingSkill = reading.DifficultyValue() * reading_skill_multiplier;
-            double colourSkill = colour.DifficultyValue() * colour_skill_multiplier;
+            double colourSkill = pattern.DifficultyValue() * colour_skill_multiplier;
             double staminaSkill = stamina.DifficultyValue() * stamina_skill_multiplier;
             double monoStaminaSkill = singleColourStamina.DifficultyValue() * stamina_skill_multiplier;
             double monoStaminaFactor = staminaSkill == 0 ? 1 : Math.Pow(monoStaminaSkill / staminaSkill, 5);
 
-            double colourDifficultStrains = colour.CountTopWeightedStrains();
+            double colourDifficultStrains = pattern.CountTopWeightedStrains();
             double rhythmDifficultStrains = rhythm.CountTopWeightedStrains();
             double staminaDifficultStrains = stamina.CountTopWeightedStrains();
 
@@ -126,7 +129,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
                                 + Math.Min(Math.Max((staminaDifficultStrains - 1000) / 3700, 0), 0.15)
                                 + Math.Min(Math.Max((staminaSkill - 7.0) / 1.0, 0), 0.05);
 
-            double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax, isConvert);
+            double combinedRating = combinedDifficultyValue(rhythm, reading, pattern, stamina, isRelax, isConvert);
             double starRating = rescale(combinedRating * 1.4);
 
             // Calculate proportional contribution of each skill to the combinedRating.
@@ -162,13 +165,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
         /// For each section, the peak strains of all separate skills are combined into a single peak strain for the section.
         /// The resulting partial rating of the beatmap is a weighted sum of the combined peaks (higher peaks are weighted more).
         /// </remarks>
-        private double combinedDifficultyValue(Rhythm rhythm, Reading reading, Colour colour, Stamina stamina, bool isRelax, bool isConvert)
+        private double combinedDifficultyValue(Rhythm rhythm, Reading reading, Pattern pattern, Stamina stamina, bool isRelax, bool isConvert)
         {
             List<double> peaks = new List<double>();
 
             var rhythmPeaks = rhythm.GetCurrentStrainPeaks().ToList();
             var readingPeaks = reading.GetCurrentStrainPeaks().ToList();
-            var colourPeaks = colour.GetCurrentStrainPeaks().ToList();
+            var colourPeaks = pattern.GetCurrentStrainPeaks().ToList();
             var staminaPeaks = stamina.GetCurrentStrainPeaks().ToList();
 
             for (int i = 0; i < colourPeaks.Count; i++)
