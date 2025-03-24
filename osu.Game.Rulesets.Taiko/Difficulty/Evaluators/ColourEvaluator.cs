@@ -22,7 +22,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
         /// <param name="maxObjectsToCheck">The maximum objects to check per count of consistent ratio.</param>
         private static double consistentRatioPenalty(TaikoDifficultyHitObject hitObject, double hitWindow, double threshold = 0.01, int maxObjectsToCheck = 64)
         {
-            int consistentRatioCount = 0;
+            double consistentRatioCount = 0;
             double totalRatioCount = 0.0;
 
             TaikoDifficultyHitObject current = hitObject;
@@ -49,10 +49,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                     break;
                 }
 
-                // If the pattern is a confirmed doublet, only count if the current hitobject is the first one in the group.
-                if (sameRhythmGroup?.HitObjects.Count == 2 && hitObject == sameRhythmGroup.FirstHitObject)
+                // If the pattern is a confirmed doublet or triplet, slightly increase the consistency ratio.
+                if (sameRhythmGroup is { HitObjects.Count: 2 or 3 } &&
+                    sameRhythmGroup.FirstHitObject == sameRhythmGroup.HitObjects[0])
                 {
-                    // I got a blank space babyyyyy, and I'll write some code
+                    consistentRatioCount += 0.25;
                 }
 
                 // Move to the previous object
