@@ -27,9 +27,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             TaikoDifficultyHitObject current = hitObject;
 
-            // If the pattern's duration shows it can be hit within a single hit window, then count it as a consistent ratio.
-            var sameRhythmGroup = hitObject.RhythmData.SameRhythmGroupedHitObjects;
-
             for (int i = 0; i < maxObjectsToCheck; i++)
             {
                 // Break if there is no valid previous object
@@ -41,12 +38,19 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                 double currentRatio = current.RhythmData.Ratio;
                 double previousRatio = previousHitObject.RhythmData.Ratio;
 
-                // A consistent interval is defined as the percentage difference between the two rhythmic ratios with the margin of error.
-                if (Math.Abs(1 - currentRatio / previousRatio) <= threshold)
+                var sameRhythmGroup = current.RhythmData.SameRhythmGroupedHitObjects;
+
+                // Check if pattern can be hit within a single hit window
+                bool withinSingleHitWindow = sameRhythmGroup != null && sameRhythmGroup.Duration <= hitWindow;
+
+                // Check ratio consistency
+                bool consistentRatio = Math.Abs(1 - currentRatio / previousRatio) <= threshold;
+
+                // If the pattern's duration shows it can be hit within a single hit window, then count it as a consistent ratio.
+                if (consistentRatio || withinSingleHitWindow)
                 {
                     consistentRatioCount++;
                     totalRatioCount += currentRatio;
-                    break;
                 }
 
                 // Move to the previous object
@@ -54,7 +58,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
             }
 
             // Ensure no division by zero
-            double ratioPenalty = 1 - totalRatioCount / (consistentRatioCount + 1) * 0.80;
+            double ratioPenalty = 1 - totalRatioCount / (consistentRatioCount + 1) * 0.40;
 
             return ratioPenalty;
         }
