@@ -27,7 +27,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             if (rhythmData.SameRhythmGroupedHitObjects?.FirstHitObject == hitObject) // Difficulty for SameRhythmGroupedHitObjects
             {
-                sameRhythm += 8.5 * evaluateDifficultyOf(rhythmData.SameRhythmGroupedHitObjects, hitWindow);
+                sameRhythm += 18 * evaluateDifficultyOf(rhythmData.SameRhythmGroupedHitObjects, hitWindow);
                 intervalPenalty = repeatedIntervalPenalty(rhythmData.SameRhythmGroupedHitObjects, hitWindow);
             }
 

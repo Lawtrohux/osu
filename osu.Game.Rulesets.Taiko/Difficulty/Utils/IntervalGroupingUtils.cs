@@ -33,10 +33,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Utils
         /// <summary>
         /// Builds the next group starting at <paramref name="startIndex"/>, advancing the index inline.
         /// </summary>
-        private static List<T> createNextGroup<T>(IReadOnlyList<T> objects, ref int startIndex, double marginOfError = 5.0)
+        private static List<T> createNextGroup<T>(IReadOnlyList<T> objects, ref int startIndex)
             where T : IHasInterval
         {
             var groupedObjects = new List<T> { objects[startIndex++] };
+
+            double baseInterval = groupedObjects[0].Interval;
+            double marginOfError = System.Math.Max(40.0, baseInterval * 0.40); // 4% tolerance or 2ms minimum
 
             // Include the second object (specifically in a doublet) if it matches the first within tolerance
             if (startIndex < objects.Count &&
