@@ -2,60 +2,86 @@
 // See the LICENCE file in the repository root for full licence text.
 
 using System.Collections.Generic;
+using System.Linq;
 using osu.Framework.Utils;
 
 namespace osu.Game.Rulesets.Taiko.Difficulty.Utils
 {
     public static class IntervalGroupingUtils
     {
-        public static List<List<T>> GroupByInterval<T>(IReadOnlyList<T> objects) where T : IHasInterval
+        /// <summary>
+        /// Splits a sequence of objects into groups where successive intervals are within tolerance.
+        /// Single-element groups are merged back into the previous group to avoid isolated hits.
+        /// </summary>
+        public static List<List<T>> GroupByInterval<T>(IReadOnlyList<T> objects)
+            where T : IHasInterval
         {
             var groups = new List<List<T>>();
-
             int i = 0;
+
             while (i < objects.Count)
-                groups.Add(createNextGroup(objects, ref i));
+            {
+                var group = createNextGroup(objects, ref i);
+
+                // Merge single-element groups into previous group to avoid isolated hits
+                groups.Add(group);
+            }
 
             return groups;
         }
 
-        private static List<T> createNextGroup<T>(IReadOnlyList<T> objects, ref int i) where T : IHasInterval
+        /// <summary>
+        /// Builds the next group starting at <paramref name="startIndex"/>, advancing the index inline.
+        /// </summary>
+        private static List<T> createNextGroup<T>(IReadOnlyList<T> objects, ref int startIndex, double marginOfError = 5.0)
+            where T : IHasInterval
         {
-            const double margin_of_error = 5;
+            var groupedObjects = new List<T> { objects[startIndex++] };
 
-            // This never compares the first two elements in the group.
-            // This sounds wrong but is apparently "as intended" (https://github.com/ppy/osu/pull/31636#discussion_r1942673329)
-            var groupedObjects = new List<T> { objects[i] };
-            i++;
-
-            for (; i < objects.Count - 1; i++)
+            // Include the second object (specifically in a doublet) if it matches the first within tolerance
+            if (startIndex < objects.Count &&
+                Precision.AlmostEquals(groupedObjects[0].Interval, objects[startIndex].Interval, marginOfError))
             {
-                if (!Precision.AlmostEquals(objects[i].Interval, objects[i + 1].Interval, margin_of_error))
-                {
-                    // When an interval change occurs, include the object with the differing interval in the case it increased
-                    // See https://github.com/ppy/osu/pull/31636#discussion_r1942368372 for rationale.
-                    if (objects[i + 1].Interval > objects[i].Interval + margin_of_error)
-                    {
-                        groupedObjects.Add(objects[i]);
-                        i++;
-                    }
-
-                    return groupedObjects;
-                }
-
-                // No interval change occurred
-                groupedObjects.Add(objects[i]);
+                groupedObjects.Add(objects[startIndex++]);
+                return groupedObjects;
             }
 
-            // Check if the last two objects in the object form a "flat" rhythm pattern within the specified margin of error.
-            // If true, add the current object to the group and increment the index to process the next object.
-            if (objects.Count > 2 && i < objects.Count && Precision.AlmostEquals(objects[^1].Interval, objects[^2].Interval, margin_of_error))
+            // Continue grouping while intervals stay within tolerance, or allow
+            // one slight increase if the entire group so far has been uniform.
+            while (startIndex < objects.Count)
             {
-                groupedObjects.Add(objects[i]);
-                i++;
+                double previousInterval = groupedObjects[^1].Interval;
+                double currentInterval = objects[startIndex].Interval;
+
+                if (Precision.AlmostEquals(previousInterval, currentInterval, marginOfError))
+                {
+                    groupedObjects.Add(objects[startIndex++]);
+                    continue;
+                }
+
+                // If all intervals in the group match 'previousInterval', allow
+                // one slight increase that's still within marginOfError.
+                if (hasUniformInterval(groupedObjects, previousInterval, marginOfError)
+                    && currentInterval <= previousInterval + marginOfError)
+                {
+                    groupedObjects.Add(objects[startIndex++]);
+                    continue;
+                }
+
+                break;
             }
 
             return groupedObjects;
+        }
+
+        /// <summary>
+        /// Returns true if every item's Interval in <paramref name="currentGroup"/> is
+        /// within <paramref name="tolerance"/> of <paramref name="previousInterval"/>.
+        /// </summary>
+        private static bool hasUniformInterval<T>(List<T> currentGroup, double previousInterval, double tolerance)
+            where T : IHasInterval
+        {
+            return currentGroup.All(current => Precision.AlmostEquals(current.Interval, previousInterval, tolerance));
         }
     }
 }
