@@ -115,15 +115,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double monoStaminaSkill = singleColourStamina.DifficultyValue() * stamina_skill_multiplier;
             double monoStaminaFactor = staminaSkill == 0 ? 1 : Math.Pow(monoStaminaSkill / staminaSkill, 5);
 
-            double colourDifficultStrains = colour.CountTopWeightedStrains();
-            double rhythmDifficultStrains = rhythm.CountTopWeightedStrains();
-            double staminaDifficultStrains = stamina.CountTopWeightedStrains();
+            double difficultStrainCount = stamina.CountTopWeightedStrains();
 
             // As we don't have pattern integration in osu!taiko, we apply the other two skills relative to rhythm.
             patternMultiplier = Math.Pow(staminaSkill * colourSkill, 0.10);
 
             strainLengthBonus = 1
-                                + Math.Min(Math.Max((staminaDifficultStrains - 1000) / 3700, 0), 0.15)
+                                + Math.Min(Math.Max((difficultStrainCount - 1000) / 3700, 0), 0.15)
                                 + Math.Min(Math.Max((staminaSkill - 7.0) / 1.0, 0), 0.05);
 
             double combinedRating = combinedDifficultyValue(rhythm, reading, colour, stamina, isRelax, isConvert, out double consistencyFactor);
@@ -136,19 +134,18 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double readingDifficulty = readingSkill * skillRating;
             double colourDifficulty = colourSkill * skillRating;
             double staminaDifficulty = staminaSkill * skillRating;
+            double mechanicalDifficulty = staminaDifficulty + colourDifficulty;
 
             TaikoDifficultyAttributes attributes = new TaikoDifficultyAttributes
             {
                 StarRating = starRating,
                 Mods = mods,
+                MechanicalDifficulty = mechanicalDifficulty,
                 RhythmDifficulty = rhythmDifficulty,
                 ReadingDifficulty = readingDifficulty,
                 ColourDifficulty = colourDifficulty,
                 StaminaDifficulty = staminaDifficulty,
                 MonoStaminaFactor = monoStaminaFactor,
-                RhythmTopStrains = rhythmDifficultStrains,
-                ColourTopStrains = colourDifficultStrains,
-                StaminaTopStrains = staminaDifficultStrains,
                 ConsistencyFactor = consistencyFactor,
                 MaxCombo = beatmap.GetMaxCombo(),
             };
