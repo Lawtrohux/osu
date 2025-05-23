@@ -70,17 +70,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (score.Mods.Any(m => m is ModEasy))
                 multiplier *= 0.950;
 
-            double mechanicalValue = computeMechanicalValue(taikoAttributes);
-            double rhythmValue = computeRhythmValue(taikoAttributes);
-            double readingValue = computeReadingValue(score, taikoAttributes);
-
+            double difficultyValue = computeDifficultyValue(score, taikoAttributes, out double mechanicalValue, out double rhythmValue, out double readingValue);
             double accuracyValue = computeAccuracyValue(score, taikoAttributes, isConvert);
 
             double totalValue =
                 Math.Pow(
-                    Math.Pow(mechanicalValue, 1.1) +
-                    Math.Pow(rhythmValue, 1.1) +
-                    Math.Pow(readingValue, 1.1) +
+                    Math.Pow(difficultyValue, 1.1) +
                     Math.Pow(accuracyValue, 1.1), 1.0 / 1.1
                 ) * multiplier;
 
@@ -96,61 +91,41 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             };
         }
 
-        private double computeBaseDifficulty(double baseDifficulty)
+        private double computeDifficultyValue(ScoreInfo score, TaikoDifficultyAttributes attributes, out double mechanicalValue, out double rhythmValue, out double readingValue)
         {
-            double difficulty = 4.25 * Math.Max(1.0, baseDifficulty / 0.165) - 4.0;
-            return Math.Min(Math.Pow(difficulty, 3) / 69052.51, Math.Pow(difficulty, 2.25) / 1250.0);
-        }
+            double baseDifficulty = 5 * Math.Max(1.0, attributes.StarRating / 0.110) - 4.0;
+            double difficultyValue = Math.Min(Math.Pow(baseDifficulty, 3) / 69052.51, Math.Pow(baseDifficulty, 2.25) / 1250.0);
 
-        private double computeMechanicalValue(TaikoDifficultyAttributes attributes)
-        {
-            double mechanicalDifficulty = computeBaseDifficulty(attributes.MechanicalDifficulty);
+            difficultyValue *= 1 + 0.10 * Math.Max(0, attributes.StarRating - 10);
 
-            mechanicalDifficulty *= 1 + 0.10 * Math.Max(0, mechanicalDifficulty - 10);
+            double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
+            difficultyValue *= lengthBonus;
 
-            mechanicalDifficulty *= lengthBonus;
-            mechanicalDifficulty *= Math.Pow(0.986, effectiveMissCount);
+            difficultyValue *= Math.Pow(0.986, effectiveMissCount);
+
+            if (score.Mods.Any(m => m is ModEasy))
+                difficultyValue *= 0.90;
+
+            if (score.Mods.Any(m => m is ModHidden))
+                difficultyValue *= 1.025;
+
+            if (score.Mods.Any(m => m is ModFlashlight<TaikoHitObject>))
+                difficultyValue *= Math.Max(1, 1.050 - Math.Min(attributes.MonoStaminaFactor / 50, 1) * lengthBonus);
 
             if (estimatedUnstableRate == null)
-                return 0;
+                difficultyValue = 0;
 
+            // Scale accuracy more harshly on nearly-completely mono (single coloured) speed maps.
             double accScalingExponent = 2 + attributes.MonoStaminaFactor;
             double accScalingShift = 500 - 100 * (attributes.MonoStaminaFactor * 3);
 
-            return mechanicalDifficulty * Math.Pow(DifficultyCalculationUtils.Erf(accScalingShift / (Math.Sqrt(2) * estimatedUnstableRate.Value)), accScalingExponent);
-        }
+            difficultyValue *= Math.Pow(DifficultyCalculationUtils.Erf(accScalingShift / (Math.Sqrt(2) * estimatedUnstableRate.Value)), accScalingExponent);
 
-        private double computeRhythmValue(TaikoDifficultyAttributes attributes)
-        {
-            double rhythmDifficulty = computeBaseDifficulty(attributes.RhythmDifficulty);
+            mechanicalValue = difficultyValue * (attributes.StaminaDifficulty + attributes.ColourDifficulty) / attributes.StarRating;
+            rhythmValue = difficultyValue * attributes.RhythmDifficulty / attributes.StarRating;
+            readingValue = difficultyValue * attributes.ReadingDifficulty / attributes.StarRating;
 
-            rhythmDifficulty *= Math.Pow(0.986, effectiveMissCount);
-
-            if (estimatedUnstableRate == null)
-                return 0;
-
-            return rhythmDifficulty;
-        }
-
-        private double computeReadingValue(ScoreInfo score, TaikoDifficultyAttributes attributes)
-        {
-            double readingDifficulty = Math.Pow(computeBaseDifficulty(attributes.ReadingDifficulty), 18);
-
-            readingDifficulty *= Math.Pow(0.986, effectiveMissCount);
-
-            if (score.Mods.Any(m => m is ModEasy))
-                readingDifficulty *= 0.90;
-
-            if (score.Mods.Any(m => m is ModHidden))
-                readingDifficulty *= 1.025;
-
-            if (score.Mods.Any(m => m is ModFlashlight<TaikoHitObject>))
-                readingDifficulty *= Math.Max(1, 1.050 - Math.Min(attributes.MonoStaminaFactor / 50, 1));
-
-            if (estimatedUnstableRate == null)
-                return 0;
-
-            return readingDifficulty;
+            return difficultyValue;
         }
 
         private double computeAccuracyValue(ScoreInfo score, TaikoDifficultyAttributes attributes, bool isConvert)
