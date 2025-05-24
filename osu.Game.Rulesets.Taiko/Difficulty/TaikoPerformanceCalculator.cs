@@ -96,9 +96,16 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             double baseDifficulty = 5 * Math.Max(1.0, attributes.StarRating / 0.110) - 4.0;
             double difficultyValue = Math.Min(Math.Pow(baseDifficulty, 3) / 69052.51, Math.Pow(baseDifficulty, 2.25) / 1250.0);
 
+            mechanicalValue = difficultyValue * attributes.MechanicalDifficulty / attributes.StarRating;
+            rhythmValue = difficultyValue * attributes.RhythmDifficulty / attributes.StarRating;
+            readingValue = difficultyValue * attributes.ReadingDifficulty / attributes.StarRating;
+
+            if (estimatedUnstableRate == null)
+                return 0;
+
             difficultyValue *= 1 + 0.10 * Math.Max(0, attributes.StarRating - 10);
 
-            double lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
+            lengthBonus = 1 + 0.1 * Math.Min(1.0, totalHits / 1500.0);
             difficultyValue *= lengthBonus;
 
             difficultyValue *= Math.Pow(0.986, effectiveMissCount);
@@ -112,18 +119,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             if (score.Mods.Any(m => m is ModFlashlight<TaikoHitObject>))
                 difficultyValue *= Math.Max(1, 1.050 - Math.Min(attributes.MonoStaminaFactor / 50, 1) * lengthBonus);
 
-            if (estimatedUnstableRate == null)
-                difficultyValue = 0;
-
             // Scale accuracy more harshly on nearly-completely mono (single coloured) speed maps.
             double accScalingExponent = 2 + attributes.MonoStaminaFactor;
             double accScalingShift = 500 - 100 * (attributes.MonoStaminaFactor * 3);
 
-            difficultyValue *= Math.Pow(DifficultyCalculationUtils.Erf(accScalingShift / (Math.Sqrt(2) * estimatedUnstableRate.Value)), accScalingExponent);
-
-            mechanicalValue = difficultyValue * attributes.MechanicalDifficulty / attributes.StarRating;
-            rhythmValue = difficultyValue * attributes.RhythmDifficulty / attributes.StarRating;
-            readingValue = difficultyValue * attributes.ReadingDifficulty / attributes.StarRating;
+            difficultyValue *= Math.Pow(DifficultyCalculationUtils.Erf(accScalingShift / (Math.Sqrt(2) * estimatedUnstableRate!.Value)), accScalingExponent);
 
             return difficultyValue;
         }
