@@ -121,7 +121,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
 
             difficultyValue *= Math.Pow(DifficultyCalculationUtils.Erf(accScalingShift / (Math.Sqrt(2) * estimatedUnstableRate.Value)), accScalingExponent);
 
-            mechanicalValue = difficultyValue * (attributes.StaminaDifficulty + attributes.ColourDifficulty) / attributes.StarRating;
+            mechanicalValue = difficultyValue * attributes.MechanicalDifficulty / attributes.StarRating;
             rhythmValue = difficultyValue * attributes.RhythmDifficulty / attributes.StarRating;
             readingValue = difficultyValue * attributes.ReadingDifficulty / attributes.StarRating;
 
