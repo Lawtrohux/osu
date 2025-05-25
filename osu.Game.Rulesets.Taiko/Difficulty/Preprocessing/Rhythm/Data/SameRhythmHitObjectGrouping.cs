@@ -70,14 +70,14 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
 
             // Calculate the average interval between hitobjects.
             HitObjectInterval = hitObjectDeltaTime.Count > 0
-                ? previous?.HitObjectInterval is double prev && Math.Abs(modalDelta - prev) <= snap_tolerance
-                    ? prev
+                ? previous?.HitObjectInterval is double previousDelta && Math.Abs(modalDelta - previousDelta) <= snap_tolerance
+                    ? previousDelta
                     : modalDelta
                 : null;
 
             // Calculate the ratio between this group's interval and the previous group's interval
-            HitObjectIntervalRatio = (previous?.HitObjectInterval is double prevRatio && HitObjectInterval is double curr)
-                ? curr / prevRatio
+            HitObjectIntervalRatio = previous?.HitObjectInterval is double previousInterval && HitObjectInterval is double currentInterval
+                ? currentInterval / previousInterval
                 : 1.0;
 
             // Calculate the interval from the previous group's start time
