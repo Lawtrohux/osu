@@ -19,7 +19,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Utils
         /// </summary>
         public static Dictionary<TaikoDifficultyHitObject, double> Normalise(
             IReadOnlyList<TaikoDifficultyHitObject> hitObjects,
-            double tolerance)
+            double margin_of_error)
         {
             var deltaTimes = hitObjects
                              .Select(h => h.DeltaTime)
@@ -32,8 +32,8 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Utils
 
             foreach (double value in deltaTimes)
             {
-                // Add to the current group if within tolerance
-                if (current != null && Math.Abs(value - current[0]) <= tolerance)
+                // Add to the current group if within margin of error
+                if (current != null && Math.Abs(value - current[0]) <= margin_of_error)
                 {
                     current.Add(value);
                     continue;

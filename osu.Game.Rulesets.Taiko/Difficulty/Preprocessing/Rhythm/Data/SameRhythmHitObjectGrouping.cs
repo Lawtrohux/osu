@@ -57,13 +57,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
 
             var hitObjectDeltaTime = hitObjects
                                      .Skip(1)
-                                     .Select(obj => normaliseDeltaTime[obj])
+                                     .Select(hitObject => normaliseDeltaTime[hitObject])
                                      .ToList();
 
             double modalDelta = hitObjectDeltaTime.Count > 0
                 ? hitObjectDeltaTime
-                  .Select(delta => Math.Round(delta))
-                  .GroupBy(delta => delta)
+                  .Select(deltaTime => Math.Round(deltaTime))
+                  .GroupBy(deltaTime => deltaTime)
                   .OrderByDescending(group => group.Count())
                   .First().Key
                 : 0;
