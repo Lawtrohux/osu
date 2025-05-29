@@ -27,12 +27,12 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
 
             if (rhythmData.SameRhythmGroupedHitObjects?.FirstHitObject == hitObject) // Difficulty for SameRhythmGroupedHitObjects
             {
-                sameRhythm += 10.0 * evaluateDifficultyOf(rhythmData.SameRhythmGroupedHitObjects, hitWindow);
+                sameRhythm += 12.5 * evaluateDifficultyOf(rhythmData.SameRhythmGroupedHitObjects, hitWindow);
                 intervalPenalty = repeatedIntervalPenalty(rhythmData.SameRhythmGroupedHitObjects, hitWindow);
             }
 
             if (rhythmData.SamePatternsGroupedHitObjects?.FirstHitObject == hitObject) // Difficulty for SamePatternsGroupedHitObjects
-                samePattern += 1.15 * ratioDifficulty(rhythmData.SamePatternsGroupedHitObjects.IntervalRatio);
+                samePattern += 0.8 * ratioDifficulty(rhythmData.SamePatternsGroupedHitObjects.IntervalRatio);
 
             difficulty += Math.Max(sameRhythm, samePattern) * intervalPenalty;
 
@@ -61,13 +61,6 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Evaluators
                         maxValue: 1);
                 }
             }
-
-            // Penalise patterns that can be hit within a single hit window.
-            intervalDifficulty *= DifficultyCalculationUtils.Logistic(
-                sameRhythmGroupedHitObjects.Duration / hitWindow,
-                midpointOffset: 0.6,
-                multiplier: 1,
-                maxValue: 1);
 
             return Math.Pow(intervalDifficulty, 0.75);
         }
