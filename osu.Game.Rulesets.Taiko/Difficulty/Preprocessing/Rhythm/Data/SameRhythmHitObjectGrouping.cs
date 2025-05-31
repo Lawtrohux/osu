@@ -42,15 +42,18 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
         /// </summary>
         public readonly double HitObjectIntervalRatio;
 
+        private const double snap_tolerance = 5.0; // Tolerance for snapping intervals to the previous group in ms.
+
         /// <inheritdoc/>
         public double Interval { get; }
 
-        public SameRhythmHitObjectGrouping(SameRhythmHitObjectGrouping? previous, List<TaikoDifficultyHitObject> hitObjects, double greatHitWindow)
+        public SameRhythmHitObjectGrouping(SameRhythmHitObjectGrouping? previous, List<TaikoDifficultyHitObject> hitObjects)
         {
             Previous = previous;
             HitObjects = hitObjects;
 
-            var normaliseDeltaTime = DeltaTimeNormaliser.Normalise(hitObjects, greatHitWindow);
+            // Cluster and normalise each hitobjects delta-time.
+            var normaliseDeltaTime = DeltaTimeNormaliser.Normalise(hitObjects, 5.0);
 
             var hitObjectDeltaTime = hitObjects
                                      .Skip(1)
@@ -65,19 +68,22 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Preprocessing.Rhythm.Data
                   .First().Key
                 : 0;
 
+            // Calculate the average interval between hitobjects.
             HitObjectInterval = hitObjectDeltaTime.Count > 0
-                ? previous?.HitObjectInterval is double previousDelta && Math.Abs(modalDelta - previousDelta) <= greatHitWindow
+                ? previous?.HitObjectInterval is double previousDelta && Math.Abs(modalDelta - previousDelta) <= snap_tolerance
                     ? previousDelta
                     : modalDelta
                 : null;
 
+            // Calculate the ratio between this group's interval and the previous group's interval
             HitObjectIntervalRatio = previous?.HitObjectInterval is double previousInterval && HitObjectInterval is double currentInterval
                 ? currentInterval / previousInterval
                 : 1.0;
 
+            // Calculate the interval from the previous group's start time
             Interval = previous == null
                 ? double.PositiveInfinity
-                : Math.Abs(StartTime - previous.StartTime) <= greatHitWindow
+                : Math.Abs(StartTime - previous.StartTime) <= snap_tolerance
                     ? 0
                     : StartTime - previous.StartTime;
         }

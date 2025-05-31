@@ -23,14 +23,13 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
     public class TaikoDifficultyCalculator : DifficultyCalculator
     {
         private const double difficulty_multiplier = 0.084375;
-        private const double rhythm_skill_multiplier = 0.75 * difficulty_multiplier;
+        private const double rhythm_skill_multiplier = 0.65 * difficulty_multiplier;
         private const double reading_skill_multiplier = 0.100 * difficulty_multiplier;
         private const double colour_skill_multiplier = 0.375 * difficulty_multiplier;
         private const double stamina_skill_multiplier = 0.445 * difficulty_multiplier;
 
         private double strainLengthBonus;
         private double patternMultiplier;
-        private double greatHitWindow;
 
         private bool isConvert;
 
@@ -46,13 +45,11 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             HitWindows hitWindows = new TaikoHitWindows();
             hitWindows.SetDifficulty(beatmap.Difficulty.OverallDifficulty);
 
-            greatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate;
-
             isConvert = beatmap.BeatmapInfo.Ruleset.OnlineID == 0;
 
             return new Skill[]
             {
-                new Rhythm(mods, greatHitWindow),
+                new Rhythm(mods, hitWindows.WindowFor(HitResult.Great) / clockRate),
                 new Reading(mods),
                 new Colour(mods),
                 new Stamina(mods, false, isConvert),
@@ -93,7 +90,7 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             }
 
             TaikoColourDifficultyPreprocessor.ProcessAndAssign(difficultyHitObjects);
-            TaikoRhythmDifficultyPreprocessor.ProcessAndAssign(noteObjects, greatHitWindow);
+            TaikoRhythmDifficultyPreprocessor.ProcessAndAssign(noteObjects);
 
             return difficultyHitObjects;
         }

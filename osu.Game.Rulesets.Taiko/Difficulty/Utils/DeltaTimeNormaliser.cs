@@ -17,7 +17,9 @@ namespace osu.Game.Rulesets.Taiko.Difficulty.Utils
         /// Combines deltaTime values that differ by at most <paramref name="tolerance"/>
         /// and replaces each value with the median of its range.
         /// </summary>
-        public static Dictionary<TaikoDifficultyHitObject, double> Normalise(IReadOnlyList<TaikoDifficultyHitObject> hitObjects, double marginOfError)
+        public static Dictionary<TaikoDifficultyHitObject, double> Normalise(
+            IReadOnlyList<TaikoDifficultyHitObject> hitObjects,
+            double marginOfError)
         {
             var deltaTimes = hitObjects
                              .Select(h => h.DeltaTime)
