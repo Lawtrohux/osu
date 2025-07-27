@@ -53,8 +53,10 @@ namespace osu.Game.Rulesets.Taiko.Difficulty
             hitWindows.SetDifficulty(difficulty.OverallDifficulty);
 
             greatHitWindow = hitWindows.WindowFor(HitResult.Great) / clockRate;
-
-            estimatedUnstableRate = computeDeviationUpperBound() * 10;
+			
+            estimatedUnstableRate = (countGreat == 0 || greatHitWindow <= 0)
+                ? null
+                : computeDeviationUpperBound(countGreat / (double)totalHits) * 10;
 
             // Total difficult hits measures the total difficulty of a map based on its consistency factor.
             totalDifficultHits = totalHits * taikoAttributes.ConsistencyFactor;
